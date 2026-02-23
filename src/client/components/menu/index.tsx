@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { classNames } from 'mo/client/classNames';
 import type { IMenuItemProps, MenuHandler } from 'mo/types';
 import { sortByIndex } from 'mo/utils';
@@ -46,16 +47,48 @@ function MenuItemEl({ item, onClick }: { item: IMenuItemProps; onClick?: MenuHan
 
 function SubMenuEl({ item, onClick }: { item: IMenuItemProps; onClick?: MenuHandler }) {
     const [open, setOpen] = useState(false);
+    const subMenuRef = useRef<HTMLDivElement>(null);
+    const popupRef = useRef<HTMLDivElement>(null);
+    const closeTimer = useRef<number>();
+
+    useLayoutEffect(() => {
+        if (!open || !subMenuRef.current || !popupRef.current) return;
+        const rect = subMenuRef.current.getBoundingClientRect();
+        const popup = popupRef.current;
+        popup.style.left = `${rect.right}px`;
+        popup.style.top = `${rect.top}px`;
+
+        const popupRect = popup.getBoundingClientRect();
+        const vw = document.documentElement.clientWidth;
+        const vh = document.documentElement.clientHeight;
+        if (popupRect.right > vw) {
+            popup.style.left = `${rect.left - popupRect.width}px`;
+        }
+        if (popupRect.bottom > vh) {
+            popup.style.top = `${vh - popupRect.height}px`;
+        }
+    }, [open]);
 
     if (!item.children?.length) {
         return <MenuItemEl item={item} onClick={onClick} />;
     }
 
+    const handleOpen = () => {
+        if (item.disabled) return;
+        clearTimeout(closeTimer.current);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        closeTimer.current = window.setTimeout(() => setOpen(false), 0);
+    };
+
     return (
         <div
+            ref={subMenuRef}
             className={classNames(variables.subMenu, open && variables.subMenuActive)}
-            onMouseEnter={() => !item.disabled && setOpen(true)}
-            onMouseLeave={() => setOpen(false)}
+            onMouseEnter={handleOpen}
+            onMouseLeave={handleClose}
         >
             <div className={classNames(variables.item, item.disabled && variables.disabled)}>
                 <span className={variables.icon} />
@@ -66,11 +99,20 @@ function SubMenuEl({ item, onClick }: { item: IMenuItemProps; onClick?: MenuHand
                     <Icon type="chevron-right" />
                 </span>
             </div>
-            {open && (
-                <div className={variables.subMenuPopup}>
-                    <MenuList data={item.children} onClick={onClick} />
-                </div>
-            )}
+            {open &&
+                createPortal(
+                    <div
+                        ref={popupRef}
+                        className={variables.subMenuPopup}
+                        onMouseEnter={handleOpen}
+                        onMouseLeave={handleClose}
+                    >
+                        <div className={variables.container}>
+                            <MenuList data={item.children} onClick={onClick} />
+                        </div>
+                    </div>,
+                    document.body
+                )}
         </div>
     );
 }
