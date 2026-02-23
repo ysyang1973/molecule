@@ -174,7 +174,6 @@ export default function TestPane({ context: molecule }: { context: IMoleculeCont
             id: panelId,
             name: panelId,
             closable: true,
-            disabled: true,
             sortIndex: 3,
             render: () => <div style={{ padding: 20 }}>Test {panelId}</div>,
         });
@@ -356,7 +355,7 @@ export type Variable = string | number;`,
     const addNotification = function () {
         molecule.notification.open({
             id: randomId(),
-            value: 'Test Notification!',
+            value: molecule.locale.localize('notification.item.test', 'Test Notification!'),
         });
     };
 
@@ -384,7 +383,7 @@ export type Variable = string | number;`,
     // ====================================================================
 
     const updateLocale = () => {
-        molecule.locale.setCurrent(molecule.locale.getCurrentLocale()?.id === 'zh-CN' ? 'en-US' : 'zh-CN');
+        molecule.locale.setCurrent(molecule.locale.getCurrentLocale()?.id === 'ko-KR' ? 'en-US' : 'ko-KR');
     };
 
     const handleAddEditorTreeToolbar = () => {

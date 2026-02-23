@@ -52,7 +52,10 @@ export const TestExtension: IExtension = {
                 ele.focus();
                 molecule.folderTree.setValidateInfo({
                     status: 'error',
-                    message: `必须提供${treeNode.fileType === 'File' ? '文件' : '文件夹'}名`,
+                    message: molecule.locale.localize(
+                        treeNode.fileType === 'File' ? 'folderTree.validate.fileName' : 'folderTree.validate.folderName',
+                        treeNode.fileType === 'File' ? 'A file name must be provided.' : 'A folder name must be provided.'
+                    ),
                 });
                 return false;
             }
@@ -109,7 +112,7 @@ export const TestExtension: IExtension = {
         molecule.folderTree.onContextMenu((_, treeNode) => {
             if (treeNode.fileType === FileTypes.File) {
                 molecule.contextMenu.add([
-                    { id: 'testPane', name: '打开 testPane 面板' },
+                    { id: 'testPane', name: molecule.locale.localize('folderTree.contextMenu.openTestPane', 'Open testPane Panel') },
                     { id: 'testPane_divider', type: 'divider' },
                 ]);
             }
@@ -208,7 +211,7 @@ export const TestExtension: IExtension = {
         molecule.editor.onClose((tabs) => {
             molecule.notification.open({
                 id: `close_tab_${new Date().valueOf()}`,
-                value: `关闭了 ${tabs.length} 个 tab`,
+                value: molecule.locale.localize('notification.item.closedTabs', `Closed ${tabs.length} tab(s)`, tabs.length.toString()),
             });
         });
 
