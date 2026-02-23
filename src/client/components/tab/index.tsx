@@ -1,5 +1,4 @@
-import { useRef } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { classNames } from 'mo/client/classNames';
 import type { ContextMenuHandler, IEditorTab, TabGroup, UniqueId } from 'mo/types';
 
@@ -17,12 +16,6 @@ export interface ITabProps {
     onContextMenu?: ContextMenuHandler<[tabId: UniqueId, groupId: UniqueId]>;
     onClick?: (tabId: UniqueId, groupId: UniqueId) => void;
     onClose?: (tabId: UniqueId, groupId: UniqueId) => void;
-    onDragStart?: (tabId: UniqueId, groupId: UniqueId) => void;
-    onDragEnd?: (tabId: UniqueId, groupId: UniqueId) => void;
-    onDragEnter?: (from: TabGroup, to: TabGroup) => void;
-    onDragLeave?: (from: TabGroup, to: TabGroup) => void;
-    onDragOver?: (from: TabGroup, to: TabGroup) => void;
-    onDrop?: (from: TabGroup, to: TabGroup) => void;
 }
 
 export default function Tab({
@@ -33,55 +26,25 @@ export default function Tab({
     onContextMenu,
     onClick,
     onClose,
-    onDragStart,
-    onDragEnd,
-    onDragEnter,
-    onDragLeave,
-    onDragOver,
-    onDrop,
 }: ITabProps) {
-    const ref = useRef<HTMLDivElement>(null);
-
-    const [{ isDragging }, drag] = useDrag({
-        type: 'DND_NODE',
-        collect(monitor) {
-            return {
-                isDragging: monitor.isDragging(),
-            };
-        },
-        item: () => {
-            onDragStart?.(data.id, groupId);
-            return { tabId: data.id, groupId };
-        },
-        end(item) {
-            onDragEnd?.(item.tabId, item.groupId);
-        },
+    const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+        id: `tab-drag-${groupId}-${data.id}`,
+        data: { tabId: data.id, groupId } satisfies TabGroup,
     });
 
-    const [{ item, isOver }, drop] = useDrop<TabGroup, any, any>({
-        accept: 'DND_NODE',
-        collect: (monitor) => {
-            return {
-                isOver: monitor.isOver(),
-                item: monitor.getItem(),
-            };
-        },
-        canDrop(item) {
-            return item.tabId !== data.id || item.groupId !== groupId;
-        },
-        hover(_, monitor) {
-            onDragOver?.(monitor.getItem(), { tabId: data.id, groupId });
-        },
-        drop(_, monitor) {
-            onDrop?.(monitor.getItem(), { tabId: data.id, groupId });
-        },
+    const { setNodeRef: setDropRef, isOver } = useDroppable({
+        id: `tab-drop-${groupId}-${data.id}`,
+        data: { tabId: data.id, groupId } satisfies TabGroup,
     });
 
-    drag(drop(ref));
+    const setRef = (node: HTMLDivElement | null) => {
+        setDragRef(node);
+        setDropRef(node);
+    };
 
     return (
         <Prevent
-            ref={ref}
+            ref={setRef}
             className={classNames(
                 variables.tab,
                 active && variables.active,
@@ -89,10 +52,10 @@ export default function Tab({
                 className
             )}
             onContextMenu={(e) => onContextMenu?.({ x: e.pageX, y: e.pageY }, data.id, groupId)}
-            tabIndex={0}
             onClick={() => onClick?.(data.id, groupId)}
-            onDragEnter={(e) => e.currentTarget === e.target && onDragEnter?.(item, { tabId: data.id, groupId })}
-            onDragLeave={(e) => e.currentTarget === e.target && onDragLeave?.(item, { tabId: data.id, groupId })}
+            {...attributes}
+            {...listeners}
+            tabIndex={0}
         >
             <Flex style={{ height: '100%', gap: 4 }}>
                 <Icon type={data.icon} />

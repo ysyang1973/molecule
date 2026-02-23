@@ -1,15 +1,16 @@
-import { forwardRef, HTMLAttributes, PropsWithChildren } from 'react';
+import { HTMLAttributes, PropsWithChildren } from 'react';
 
-export default forwardRef<HTMLDivElement, PropsWithChildren<HTMLAttributes<HTMLDivElement>>>(function Prevent(
-    { children, onContextMenu, ...rest },
-    ref
-) {
+export default function Prevent({
+    children,
+    onContextMenu,
+    ref,
+    ...rest
+}: PropsWithChildren<HTMLAttributes<HTMLDivElement> & { ref?: React.Ref<HTMLDivElement> }>) {
     return (
         <div
             onContextMenu={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                e.persist();
                 (e.target as HTMLDivElement).focus();
                 onContextMenu?.(e);
             }}
@@ -19,4 +20,4 @@ export default forwardRef<HTMLDivElement, PropsWithChildren<HTMLAttributes<HTMLD
             {children}
         </div>
     );
-});
+}

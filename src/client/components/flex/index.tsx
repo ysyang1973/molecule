@@ -1,4 +1,4 @@
-import { CSSProperties, forwardRef, HTMLAttributes, type PropsWithChildren } from 'react';
+import { CSSProperties, HTMLAttributes, type PropsWithChildren } from 'react';
 import { classNames } from 'mo/client/classNames';
 import type { HTMLElementProps } from 'mo/types';
 
@@ -9,12 +9,20 @@ export interface IFlexProps
         Pick<HTMLAttributes<HTMLDivElement>, 'tabIndex' | 'onClick' | 'onContextMenu' | 'onDragEnter' | 'onDragLeave'> {
     alignItems?: CSSProperties['alignItems'];
     justifyContent?: CSSProperties['justifyContent'];
+    ref?: React.Ref<HTMLElement>;
 }
 
-export default forwardRef<HTMLElement, PropsWithChildren<IFlexProps>>(function Flex(
-    { alignItems = 'center', justifyContent = 'center', children, title, className, role, style, ...rest },
-    ref
-) {
+export default function Flex({
+    alignItems = 'center',
+    justifyContent = 'center',
+    children,
+    title,
+    className,
+    role,
+    style,
+    ref,
+    ...rest
+}: PropsWithChildren<IFlexProps>) {
     return (
         <section
             className={classNames(variables.flex, className)}
@@ -27,4 +35,4 @@ export default forwardRef<HTMLElement, PropsWithChildren<IFlexProps>>(function F
             {children}
         </section>
     );
-});
+}

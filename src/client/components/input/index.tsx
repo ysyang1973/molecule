@@ -54,7 +54,6 @@ export default function Input({
 
     const handleInputBlur = (e: React.FocusEvent<HTMLTextAreaElement, Element>) => {
         e.stopPropagation();
-        e.persist();
         onBlur?.(e);
     };
 
@@ -64,7 +63,6 @@ export default function Input({
 
     const handleInputKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         e.stopPropagation();
-        e.persist();
         onKeyDown?.(e);
         // enter press
         if (e.keyCode === 13) {

@@ -3,7 +3,7 @@ import { create } from '@dtinsight/molecule';
 
 const instance = create({
     extensions: import('./extensions/TestExtension').then(({ TestExtension }) => [TestExtension]),
-    defaultLocale: 'zh-CN',
+    defaultLocale: 'ko-KR',
     defaultColorTheme: 'Default Dark+',
     onigurumPath: '/wasm/onig.wasm',
 });

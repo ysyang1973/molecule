@@ -1,4 +1,4 @@
-import { Children, cloneElement, isValidElement } from 'react';
+import { cloneElement, isValidElement } from 'react';
 import { merge, omitBy } from 'lodash-es';
 import type { editor } from 'mo/monaco';
 import type { Arraylize, IColorTheme, IconType, IMenuItemProps, IterableItem, RecordWithId, UniqueId } from 'mo/types';
@@ -22,13 +22,19 @@ export function sortByIndex(a: sortIndexRequired, b: sortIndexRequired) {
  * @param children React.ReactNode
  * @param props Parent props
  */
-export function cloneReactChildren<P>(children: React.ReactNode, props: P): React.ReactNode {
-    return Children.map(children, (child) => {
-        if (isValidElement(child)) {
-            return cloneElement(child, props);
-        }
-        return child;
-    });
+export function cloneReactChildren(children: React.ReactNode, props: Record<string, any>): React.ReactNode {
+    if (Array.isArray(children)) {
+        return children.map((child) => {
+            if (isValidElement(child)) {
+                return cloneElement(child, props);
+            }
+            return child;
+        });
+    }
+    if (isValidElement(children)) {
+        return cloneElement(children, props);
+    }
+    return children;
 }
 
 /**

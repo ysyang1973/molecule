@@ -48,7 +48,7 @@ export default function ScrollBar({
     const [ref, rect] = useMeasure<HTMLDivElement>();
     const viewport = useRef<HTMLDivElement>(null);
     const track = useRef<HTMLDivElement>(null);
-    const scroll = useScroll(viewport);
+    const scroll = useScroll(viewport as React.RefObject<HTMLElement>);
     const [hovered, setHovered] = useState(false);
     const [slideRef, onSlide, onSlideStart] = useSlide();
 
@@ -155,7 +155,7 @@ export default function ScrollBar({
                                 return null;
                         }
                     })();
-                    if (offset !== null) {
+                    if (offset !== null && viewport.current) {
                         viewport.current.scrollTo({
                             [topOrLeft]: offset,
                         });

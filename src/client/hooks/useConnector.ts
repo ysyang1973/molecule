@@ -1,6 +1,5 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useMemo, useSyncExternalStore } from 'react';
 import type { IMoleculeContext } from 'mo/types';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
 import { Context } from '../context';
 

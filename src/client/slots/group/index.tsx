@@ -25,12 +25,6 @@ export interface IGroupProps {
     onContextMenu?: EditorContextMenu;
     onToolbarClick?: GroupMenuHandler;
     onCloseTab?: (tabId: UniqueId, groupId: UniqueId) => void;
-    onDragStart?: (tabId: UniqueId, groupId: UniqueId) => void;
-    onDragEnd?: (tabId: UniqueId, groupId: UniqueId) => void;
-    onDragEnter?: (from: TabGroup, to: TabGroup) => void;
-    onDragLeave?: (from: TabGroup, to: TabGroup) => void;
-    onDragOver?: (from: TabGroup, to: TabGroup) => void;
-    onDrop?: (from: TabGroup, to: TabGroup) => void;
 }
 
 const MonacoEditor = lazy(() => import('../../components/monaco'));
@@ -48,12 +42,6 @@ export default function Group({
     onContextMenu,
     onToolbarClick,
     onCloseTab,
-    onDragStart,
-    onDragEnd,
-    onDragEnter,
-    onDragLeave,
-    onDragOver,
-    onDrop,
 }: IGroupProps) {
     const viewState = useRef(new WeakMap());
     const tab = group.data.find(searchById(group.activeTab));
@@ -161,12 +149,6 @@ export default function Group({
                             onContextMenu={onContextMenu}
                             onClose={onCloseTab}
                             onClick={onSelectTab}
-                            onDragStart={onDragStart}
-                            onDragEnd={onDragEnd}
-                            onDragEnter={onDragEnter}
-                            onDragLeave={onDragLeave}
-                            onDragOver={onDragOver}
-                            onDrop={onDrop}
                         />
                     );
                 })}

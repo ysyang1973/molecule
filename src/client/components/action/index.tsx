@@ -23,7 +23,6 @@ export default function Action({
             className={classNames(variables.action, disabled && variables.disabled, className)}
             onClick={(e) => {
                 e.stopPropagation();
-                e.persist();
                 !disabled && onClick?.(e);
             }}
             {...restProps}

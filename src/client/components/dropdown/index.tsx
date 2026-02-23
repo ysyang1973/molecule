@@ -1,29 +1,90 @@
-import React, { useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import type { IMenuItemProps, MenuHandler, UniqueId } from 'mo/types';
 import { searchById } from 'mo/utils';
-import RcDropdown from 'rc-dropdown';
-import type { DropdownProps } from 'rc-dropdown/es/Dropdown';
 
 import Menu from '../menu';
-import placements from './placements';
+import type { Placement } from './placements';
 import './index.scss';
 
-export type ActionType = Exclude<DropdownProps['trigger'], Array<any> | 'focus'>;
+export type ActionType = 'click' | 'hover' | 'contextMenu';
 
 /**
  * If a dropdown item has a clone property, it will trigger corresponding click event
  */
 export type DropdownData = IMenuItemProps & { clone?: UniqueId };
 
-export interface IDropdownProps
-    extends Pick<DropdownProps, 'children' | 'visible' | 'onVisibleChange' | 'getPopupContainer' | 'overlayClassName'> {
+export interface IDropdownProps {
+    children?: ReactNode;
+    visible?: boolean;
+    onVisibleChange?: (visible: boolean) => void;
+    getPopupContainer?: () => HTMLElement;
+    overlayClassName?: string;
     trigger?: ActionType;
     data?: DropdownData[];
     disabled?: boolean;
     alignPoint?: boolean;
     stopPropagation?: boolean;
     onClick?: MenuHandler;
-    placement?: keyof typeof placements;
+    placement?: Placement;
+}
+
+function positionOverlay(
+    overlay: HTMLDivElement,
+    triggerEl: HTMLElement,
+    placement: Placement,
+    alignPoint: boolean,
+    mousePos: { x: number; y: number }
+) {
+    // Reset transform
+    overlay.style.transform = '';
+
+    if (alignPoint) {
+        overlay.style.left = `${mousePos.x}px`;
+        overlay.style.top = `${mousePos.y}px`;
+        return;
+    }
+
+    const rect = triggerEl.getBoundingClientRect();
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+
+    switch (placement) {
+        case 'bottomLeft':
+        default:
+            overlay.style.left = `${rect.left + scrollX}px`;
+            overlay.style.top = `${rect.bottom + scrollY + 4}px`;
+            break;
+        case 'bottom':
+            overlay.style.left = `${rect.left + rect.width / 2 + scrollX}px`;
+            overlay.style.top = `${rect.bottom + scrollY + 4}px`;
+            overlay.style.transform = 'translateX(-50%)';
+            break;
+        case 'bottomRight':
+            overlay.style.left = `${rect.right + scrollX}px`;
+            overlay.style.top = `${rect.bottom + scrollY + 4}px`;
+            overlay.style.transform = 'translateX(-100%)';
+            break;
+        case 'topLeft':
+            overlay.style.left = `${rect.left + scrollX}px`;
+            overlay.style.top = `${rect.top + scrollY - 4}px`;
+            overlay.style.transform = 'translateY(-100%)';
+            break;
+        case 'top':
+            overlay.style.left = `${rect.left + rect.width / 2 + scrollX}px`;
+            overlay.style.top = `${rect.top + scrollY - 4}px`;
+            overlay.style.transform = 'translate(-50%, -100%)';
+            break;
+        case 'topRight':
+            overlay.style.left = `${rect.right + scrollX}px`;
+            overlay.style.top = `${rect.top + scrollY - 4}px`;
+            overlay.style.transform = 'translate(-100%, -100%)';
+            break;
+        case 'rightTop':
+            overlay.style.left = `${rect.right + scrollX}px`;
+            overlay.style.top = `${rect.top + scrollY - 4}px`;
+            break;
+    }
 }
 
 export default function Dropdown({
@@ -34,36 +95,69 @@ export default function Dropdown({
     disabled,
     visible,
     stopPropagation,
-    placement,
+    placement = 'bottomLeft',
     trigger = 'click',
     getPopupContainer,
     onVisibleChange,
     onClick,
 }: IDropdownProps) {
     const [stateVisible, setVisible] = useState(false);
-    const getEvents = () => {
-        if (!stopPropagation) return {};
-        switch (trigger) {
-            case 'click':
-                return {
-                    onClick: (e: React.MouseEvent) => e.stopPropagation(),
-                };
-            case 'contextMenu':
-                return { onContextMenu: (e: React.MouseEvent) => e.stopPropagation() };
-            default:
-                break;
-        }
-    };
+    const triggerRef = useRef<HTMLSpanElement>(null);
+    const overlayRef = useRef<HTMLDivElement>(null);
+    const mousePos = useRef({ x: 0, y: 0 });
 
-    const events = getEvents();
+    const isVisible = visible ?? stateVisible;
 
-    const handleVisibleChange = (next: boolean) => {
-        if (disabled) return;
-        onVisibleChange?.(next);
-        if (typeof visible !== 'boolean') {
-            setVisible(next);
-        }
-    };
+    const updateVisible = useCallback(
+        (next: boolean) => {
+            if (disabled) return;
+            onVisibleChange?.(next);
+            if (typeof visible !== 'boolean') {
+                setVisible(next);
+            }
+        },
+        [disabled, onVisibleChange, visible]
+    );
+
+    // Trigger events
+    const triggerEvents: Record<string, (e: React.MouseEvent) => void> = {};
+
+    if (trigger === 'click') {
+        triggerEvents.onClick = (e: React.MouseEvent) => {
+            if (stopPropagation) e.stopPropagation();
+            if (alignPoint) mousePos.current = { x: e.clientX, y: e.clientY };
+            updateVisible(!isVisible);
+        };
+    } else if (trigger === 'contextMenu') {
+        triggerEvents.onContextMenu = (e: React.MouseEvent) => {
+            if (stopPropagation) e.stopPropagation();
+            e.preventDefault();
+            if (alignPoint) mousePos.current = { x: e.clientX, y: e.clientY };
+            updateVisible(!isVisible);
+        };
+    }
+
+    // Close on outside click
+    useEffect(() => {
+        if (!isVisible) return;
+        const handleOutside = (e: MouseEvent) => {
+            if (
+                triggerRef.current?.contains(e.target as Node) ||
+                overlayRef.current?.contains(e.target as Node)
+            ) {
+                return;
+            }
+            updateVisible(false);
+        };
+        document.addEventListener('mousedown', handleOutside);
+        return () => document.removeEventListener('mousedown', handleOutside);
+    }, [isVisible, updateVisible]);
+
+    // Position overlay after render
+    useLayoutEffect(() => {
+        if (!isVisible || !overlayRef.current || !triggerRef.current) return;
+        positionOverlay(overlayRef.current, triggerRef.current, placement, !!alignPoint, mousePos.current);
+    }, [isVisible, placement, alignPoint]);
 
     const handleClick = (item: DropdownData) => {
         if (typeof visible !== 'boolean') {
@@ -75,21 +169,21 @@ export default function Dropdown({
     };
 
     if (!data?.length) return children;
+
+    const container = getPopupContainer?.() ?? document.body;
+
     return (
-        <RcDropdown
-            visible={visible ?? stateVisible}
-            onVisibleChange={handleVisibleChange}
-            trigger={trigger}
-            overlay={<Menu data={data} onClick={handleClick} />}
-            minOverlayWidthMatchTrigger={false}
-            alignPoint={alignPoint}
-            placement={placement as any}
-            placements={placements}
-            getPopupContainer={getPopupContainer}
-            overlayClassName={overlayClassName}
-        >
-            {/* Children should support onClick and onContextMenu event */}
-            {React.cloneElement(children, { ...events })}
-        </RcDropdown>
+        <>
+            <span ref={triggerRef} {...triggerEvents}>
+                {children}
+            </span>
+            {isVisible &&
+                createPortal(
+                    <div ref={overlayRef} className={`mo-dropdown ${overlayClassName || ''}`}>
+                        <Menu data={data} onClick={handleClick} />
+                    </div>,
+                    container
+                )}
+        </>
     );
 }

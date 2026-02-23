@@ -28,7 +28,14 @@ export class EditorTreeService extends BaseService<EditorTreeModel> {
 
     public addToolbar(toolbar: Arraylize<IMenuItemProps>) {
         this.dispatch((draft) => {
-            draft.toolbar.push(...arraylize(toolbar));
+            arraylize(toolbar).forEach((item) => {
+                const idx = draft.toolbar.findIndex(searchById(item.id));
+                if (idx === -1) {
+                    draft.toolbar.push(item);
+                } else {
+                    Object.assign(draft.toolbar[idx], item);
+                }
+            });
         });
     }
 

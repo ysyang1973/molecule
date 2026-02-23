@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import React, { Fragment } from 'react';
 import { classNames } from 'mo/client/classNames';
 
 import variables from './index.scss';
@@ -13,7 +13,7 @@ export default function Text({ highlight, children }: ITextProps) {
 
     let lastIdx = 0;
     let idx = children.toLocaleLowerCase().indexOf(highlight.toLocaleLowerCase(), lastIdx);
-    const frag: JSX.Element[] = [];
+    const frag: React.JSX.Element[] = [];
     while (idx !== -1 && frag.length <= 4) {
         frag.push(<>{children.toLocaleLowerCase().substring(lastIdx, idx)}</>);
         frag.push(

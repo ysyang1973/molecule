@@ -1,4 +1,5 @@
 import { immerable } from 'immer';
+import type React from 'react';
 import { FileTypeLiteral, type TreeModel, type UniqueId } from 'mo/types';
 
 interface TreeModelNode<T extends TreeModel<T>> {
@@ -62,7 +63,7 @@ export class TreeNodeModel<T> {
         /**
          * The icon of this tree node, which is rendered in front of the name
          */
-        public icon?: string | JSX.Element,
+        public icon?: string | React.JSX.Element,
         /**
          * The status of disabled
          */

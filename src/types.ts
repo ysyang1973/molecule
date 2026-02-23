@@ -60,7 +60,7 @@ export type WithHidden<T extends object | void> = T extends void ? { hidden?: bo
 /**
  * @refer: https://code.visualstudio.com/api/references/icons-in-labels#icon-listing
  */
-export type IconType = string | JSX.Element;
+export type IconType = string | React.JSX.Element;
 
 /**
  * Represents a type that requires an 'id' property of type UniqueId.

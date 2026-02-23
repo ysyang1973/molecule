@@ -1,11 +1,13 @@
-import placements from 'rc-dropdown/lib/placements';
+const placements = {
+    topLeft: 'topLeft',
+    top: 'top',
+    topRight: 'topRight',
+    bottomLeft: 'bottomLeft',
+    bottom: 'bottom',
+    bottomRight: 'bottomRight',
+    rightTop: 'rightTop',
+} as const;
 
-export default {
-    ...placements,
-    rightTop: {
-        points: ['tl', 'tr'],
-        overflow: placements.top.overflow,
-        offset: [0, -4],
-        targetOffset: placements.top.targetOffset,
-    },
-};
+export type Placement = keyof typeof placements;
+
+export default placements;

@@ -34,3 +34,6 @@ website/.env.production.local
 website/npm-debug.log*
 website/yarn-debug.log*
 website/yarn-error.log*
+**/style__variables.js
+src/**/client/**/index.css
+src/client/classNames/style.css

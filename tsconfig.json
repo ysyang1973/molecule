@@ -16,6 +16,7 @@
         "allowSyntheticDefaultImports": true,
         "preserveWatchOutput": true,
         "resolveJsonModule": true,
+        "skipLibCheck": true,
         "paths": {
             "mo/*": ["./src/*"]
         }

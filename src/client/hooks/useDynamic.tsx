@@ -1,4 +1,4 @@
-import { lazy, Suspense, useContext, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useContext, useEffect, useState } from 'react';
 import { isFunction, pickBy } from 'lodash-es';
 
 import { Progress } from '../components';
@@ -12,7 +12,7 @@ export default function useDynamic(token: string) {
         if (!modules.has(token)) return Promise.resolve(null);
         const Comp = modules.get(token);
         if (Comp === null || Comp === undefined) return Promise.resolve(null);
-        return new Promise<JSX.Element>((resolve) => {
+        return new Promise<React.JSX.Element>((resolve) => {
             const Entry = lazy(() => Comp);
             const controller = controllers[token];
 

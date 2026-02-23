@@ -1,4 +1,4 @@
-import { type CSSProperties, forwardRef } from 'react';
+import { type CSSProperties } from 'react';
 import { classNames } from 'mo/client/classNames';
 import { useHover } from 'mo/client/hooks';
 
@@ -11,29 +11,28 @@ export interface ISashProps {
     disabled?: boolean;
     split?: 'vertical' | 'horizontal';
     dragging?: boolean;
+    ref?: React.Ref<HTMLDivElement>;
 }
 
-export const Sash = forwardRef<HTMLDivElement, ISashProps>(
-    ({ className, disabled, dragging, style, split = 'vertical' }, forwardedRef) => {
-        const [innerRef, active] = useHover<HTMLElement>();
+export function Sash({ className, disabled, dragging, style, split = 'vertical', ref: forwardedRef }: ISashProps) {
+    const [innerRef, active] = useHover<HTMLElement>();
 
-        return (
-            <Prevent
-                ref={(container) => {
-                    innerRef(container);
-                    if (typeof forwardedRef === 'function') forwardedRef(container);
-                    else if (forwardedRef !== null) forwardedRef.current = container;
-                }}
-                role="Resizer"
-                style={style}
-                className={classNames(
-                    variables.container,
-                    (dragging || active) && variables.hover,
-                    disabled && variables.disabled,
-                    variables[split],
-                    className
-                )}
-            />
-        );
-    }
-);
+    return (
+        <Prevent
+            ref={(container) => {
+                innerRef(container);
+                if (typeof forwardedRef === 'function') forwardedRef(container);
+                else if (forwardedRef != null && typeof forwardedRef === 'object') (forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = container;
+            }}
+            role="Resizer"
+            style={style}
+            className={classNames(
+                variables.container,
+                (dragging || active) && variables.hover,
+                disabled && variables.disabled,
+                variables[split],
+                className
+            )}
+        />
+    );
+}

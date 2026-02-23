@@ -1,4 +1,4 @@
-import React, { type CSSProperties, forwardRef, type ReactNode, useEffect, useMemo, useRef } from 'react';
+import React, { type CSSProperties, type ReactNode, useEffect, useMemo, useRef } from 'react';
 import { classNames } from 'mo/client/classNames';
 import { useDeepState, useResize } from 'mo/client/hooks';
 import { cloneReactChildren } from 'mo/utils';
@@ -13,7 +13,7 @@ interface IAxis {
 }
 
 export interface ISplitProps {
-    children: JSX.Element[];
+    children: React.JSX.Element[];
     title?: string;
     style?: React.CSSProperties;
     /**
@@ -31,23 +31,22 @@ export interface ISplitProps {
      */
     resizerSize?: number;
     onChange?: (sizes: number[]) => void;
+    ref?: React.Ref<HTMLDivElement>;
 }
 
-export const SplitPane = forwardRef<HTMLDivElement, ISplitProps>(function (
-    {
-        sizes: propSizes,
-        title,
-        style,
-        children,
-        split = 'vertical',
-        className,
-        sashClassName,
-        paneClassName,
-        resizerSize = 4,
-        onChange,
-    },
-    forwarded
-) {
+export function SplitPane({
+    sizes: propSizes,
+    title,
+    style,
+    children,
+    split = 'vertical',
+    className,
+    sashClassName,
+    paneClassName,
+    resizerSize = 4,
+    onChange,
+    ref: forwarded,
+}: ISplitProps) {
     // ======================== Basic params ========================
     const sizeName = split === 'vertical' ? 'width' : 'height';
     const sPos = split === 'vertical' ? 'left' : 'top';
@@ -215,4 +214,4 @@ export const SplitPane = forwardRef<HTMLDivElement, ISplitProps>(function (
                 })}
         </div>
     );
-});
+}

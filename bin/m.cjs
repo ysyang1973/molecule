@@ -11,14 +11,14 @@ const { rimrafSync } = require('rimraf');
 const chokidar = require('chokidar');
 const sass = require('sass');
 
-const src = path.join(__dirname, '..', 'src');
-const dist = path.join(__dirname, '..', 'esm');
+const src = path.join(__dirname, '..', 'src').replace(/\\/g, '/');
+const dist = path.join(__dirname, '..', 'esm').replace(/\\/g, '/');
 
-const tsFilePath = path.join(src, '**', '*.ts');
-const tsxFilePath = path.join(src, '**', '*.tsx');
-const scssFilePath = path.join(src, '**', '*.scss');
-const cssFilePath = path.join(src, '**', '*.css');
-const jsonFilePath = path.join(src, '**', '*.json');
+const tsFilePath = `${src}/**/*.ts`;
+const tsxFilePath = `${src}/**/*.tsx`;
+const scssFilePath = `${src}/**/*.scss`;
+const cssFilePath = `${src}/**/*.css`;
+const jsonFilePath = `${src}/**/*.json`;
 
 const styleVariablesFileName = 'style__variables.js';
 
@@ -116,7 +116,7 @@ async function transform(entryPoints, watch = false) {
 
 function transformTyping(watch = false) {
     return new Promise((resolve) => {
-        const command = watch ? 'tsc && (concurrently "tsc -w" "tsc-alias -w")' : 'tsc && tsc-alias';
+        const command = watch ? 'npx tsc && (npx concurrently "npx tsc -w" "npx tsc-alias -w")' : 'npx tsc && npx tsc-alias';
         typingCtx = spawn(command, {
             stdio: 'inherit',
             shell: true,
@@ -156,7 +156,7 @@ async function transformStyle(entrys, watch = false) {
     async function _transform(entry) {
         const res = await sass.compileAsync(entry);
         const regex = /^:export {(\n|.)+}$/m;
-        const target = entry.replace(/src\//, 'esm/').replace(/.scss/, '.css');
+        const target = entry.replace(/\\/g, '/').replace(/src\//, 'esm/').replace(/.scss/, '.css');
         const dirname = path.dirname(target);
         if (!fs.existsSync(dirname)) {
             fs.mkdirSync(dirname, { recursive: true });
@@ -204,12 +204,12 @@ async function copyFile(entrys, watch = false) {
      * @param {string} filePath
      */
     function _copyFile(filePath) {
-        const dest = filePath.replace(/src\//, 'esm/');
+        const dest = filePath.replace(/\\/g, '/').replace(/src\//, 'esm/');
         const dirname = path.dirname(dest);
         if (!fs.existsSync(dirname)) {
             fs.mkdirSync(dirname, { recursive: true });
         }
-        fs.createReadStream(filePath, 'utf-8').pipe(fs.createWriteStream(dest));
+        fs.copyFileSync(filePath, dest);
     }
 }
 
@@ -225,7 +225,7 @@ function alias(source, filePath) {
     target = target.replace(regex, (substring) => {
         if (/mo\//.test(substring)) {
             const absolutePath = substring.match(/(?<="|')\S+(?="|')/gm)[0].replace(/mo\//, `${src}/`);
-            const relative = path.relative(path.dirname(filePath), absolutePath);
+            const relative = path.relative(path.dirname(filePath), absolutePath).replace(/\\/g, '/');
             return `"${relative}"`;
         } else {
             return substring;

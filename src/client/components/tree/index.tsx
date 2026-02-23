@@ -1,6 +1,5 @@
-import { useMemo, useRef } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import React, { useMemo, useRef } from 'react';
+import { DndContext, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragOverEvent, type DragEndEvent } from '@dnd-kit/core';
 import { classNames } from 'mo/client/classNames';
 import { type ContextMenuHandler, FileTypes, type IMenuItemProps, KeyboardEventHandler, type UniqueId } from 'mo/types';
 import { type TreeNodeModel } from 'mo/utils/tree';
@@ -21,7 +20,7 @@ export interface ITreeProps<T = any> {
     activeClassName?: string;
     contextMenu?: IMenuItemProps[];
     onSelect?: (node: TreeNodeModel<T>) => void;
-    renderTitle?: (node: TreeNodeModel<T>, index: number, isLeaf: boolean) => JSX.Element | string;
+    renderTitle?: (node: TreeNodeModel<T>, index: number, isLeaf: boolean) => React.JSX.Element | string;
     onContextMenu?: ContextMenuHandler<[treeNode: TreeNodeModel<T>]>;
     onKeyDown?: KeyboardEventHandler<HTMLElement>;
     onDragStart?(source: TreeNodeModel<T>): void;
@@ -48,6 +47,7 @@ export default function Tree<T = any>({
     onDrop,
 }: ITreeProps<T>) {
     const wrapper = useRef<HTMLDivElement>(null);
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
     const pathMap = useMemo(() => {
         const map: Record<UniqueId, UniqueId[]> = {};
@@ -83,6 +83,27 @@ export default function Tree<T = any>({
     const handleNodeClick = (node: TreeNodeModel<T>, e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         e.stopPropagation();
         onSelect?.(node);
+    };
+
+    const handleDragStart = (event: DragStartEvent) => {
+        const node = event.active.data.current as TreeNodeModel<T>;
+        onDragStart?.(node);
+    };
+
+    const handleDragOver = (event: DragOverEvent) => {
+        if (!event.over) return;
+        const source = event.active.data.current as TreeNodeModel<T>;
+        const target = event.over.data.current as TreeNodeModel<T>;
+        onDragOver?.(source, target);
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const source = event.active.data.current as TreeNodeModel<T>;
+        onDragEnd?.(source);
+        if (event.over) {
+            const target = event.over.data.current as TreeNodeModel<T>;
+            onDrop?.(source, target);
+        }
     };
 
     const renderFolderIcon = (isExpand: boolean, isLoading: boolean) => {
@@ -136,10 +157,6 @@ export default function Tree<T = any>({
                     onClick={(e) => handleNodeClick(item, e)}
                     onKeyDown={(e) => onKeyDown?.(e, item)}
                     onContextMenu={onContextMenu}
-                    onDragStart={onDragStart}
-                    onDragOver={onDragOver}
-                    onDragEnd={onDragEnd}
-                    onDrop={onDrop}
                 />
             );
 
@@ -150,10 +167,10 @@ export default function Tree<T = any>({
     };
 
     return (
-        <DndProvider backend={HTML5Backend} context={window}>
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
             <div role="tree" ref={wrapper} className={classNames(variables.container, className)}>
                 {renderTreeNode(data, 0)}
             </div>
-        </DndProvider>
+        </DndContext>
     );
 }

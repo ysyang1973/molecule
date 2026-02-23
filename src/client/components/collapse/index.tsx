@@ -58,7 +58,7 @@ export default function Collapse({
     const timeout = useRef(0);
     const activeKeysRef = useLatest(activePanelKeys);
 
-    const mutationObserver = useRef<MutationObserver | undefined>();
+    const mutationObserver = useRef<MutationObserver | undefined>(undefined);
     useEffect(() => {
         mutationObserver.current = new MutationObserver((mutationList) => {
             mutationList.forEach((mutation) => {

@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import type React from 'react';
 import { ContextMenuHandler } from 'mo/types';
 import { TreeNodeModel } from 'mo/utils/tree';
 
@@ -13,16 +13,12 @@ export interface ITreeNodeProps {
     indent: number;
     className?: string;
     draggable?: boolean;
-    renderIcon: () => JSX.Element | null;
+    renderIcon: () => React.JSX.Element | null;
     renderTitle: () => React.ReactNode;
-    renderIndent: () => JSX.Element;
+    renderIndent: () => React.JSX.Element;
     onClick?: React.MouseEventHandler<HTMLDivElement>;
     onKeyDown?: React.KeyboardEventHandler<HTMLElement>;
     onContextMenu?: ContextMenuHandler<[treeNode: ITreeNodeItemProps]>;
-    onDragStart?: (source: ITreeNodeItemProps) => void;
-    onDragOver?: (source: ITreeNodeItemProps, target: ITreeNodeItemProps) => void;
-    onDragEnd?: (data: ITreeNodeItemProps) => void;
-    onDrop?: (source: ITreeNodeItemProps, traget: ITreeNodeItemProps) => void;
 }
 
 export default ({
@@ -34,41 +30,26 @@ export default ({
     renderTitle,
     renderIndent,
     onClick,
-    onDragStart,
-    onDragOver,
-    onDrop,
-    onDragEnd,
     onKeyDown,
     onContextMenu,
 }: ITreeNodeProps) => {
-    const ref = useRef<HTMLDivElement>(null);
-    const [, drag] = useDrag({
-        type: 'DND_NODE',
-        canDrag: () => !!draggable,
-        item: () => {
-            onDragStart?.(data);
-            return data;
-        },
-        end() {
-            onDragEnd?.(data);
-        },
+    const { attributes, listeners, setNodeRef: setDragRef } = useDraggable({
+        id: `drag-${data.id}`,
+        data,
+        disabled: !draggable,
     });
 
-    const [, drop] = useDrop<ITreeNodeItemProps>({
-        accept: 'DND_NODE',
-        hover: (item) => {
-            onDragOver?.(item, data);
-        },
-        drop(item) {
-            onDrop?.(item, data);
-        },
+    const { setNodeRef: setDropRef } = useDroppable({
+        id: `drop-${data.id}`,
+        data,
     });
 
-    drag(drop(ref));
+    const setRef = (node: HTMLDivElement | null) => {
+        setDragRef(node);
+        setDropRef(node);
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-        // https://medium.com/trabe/react-syntheticevent-reuse-889cd52981b6
-        e.persist();
         e.stopPropagation();
         onKeyDown?.(e);
     };
@@ -80,8 +61,7 @@ export default ({
 
     return (
         <Prevent
-            ref={ref}
-            tabIndex={0}
+            ref={setRef}
             data-indent={indent}
             data-key={data.id}
             data-id={`mo_treeNode_${nodeKey}`}
@@ -90,6 +70,9 @@ export default ({
             onClick={onClick}
             onKeyDown={handleKeyDown}
             onContextMenu={(e) => onContextMenu?.({ x: e.pageX, y: e.pageY }, data)}
+            {...attributes}
+            {...listeners}
+            tabIndex={0}
         >
             {renderIndent()}
             {renderIcon()}
