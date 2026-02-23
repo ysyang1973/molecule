@@ -29,6 +29,35 @@ export interface IDropdownProps {
     placement?: Placement;
 }
 
+function clampToViewport(overlay: HTMLDivElement) {
+    const oRect = overlay.getBoundingClientRect();
+    const vw = document.documentElement.clientWidth;
+    const vh = document.documentElement.clientHeight;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+
+    let clamped = false;
+    if (oRect.right > vw) {
+        overlay.style.left = `${vw - oRect.width + scrollX}px`;
+        clamped = true;
+    }
+    if (oRect.left < 0) {
+        overlay.style.left = `${scrollX}px`;
+        clamped = true;
+    }
+    if (oRect.bottom > vh) {
+        overlay.style.top = `${vh - oRect.height + scrollY}px`;
+        clamped = true;
+    }
+    if (oRect.top < 0) {
+        overlay.style.top = `${scrollY}px`;
+        clamped = true;
+    }
+    if (clamped) {
+        overlay.style.transform = '';
+    }
+}
+
 function positionOverlay(
     overlay: HTMLDivElement,
     triggerEl: HTMLElement,
@@ -42,6 +71,7 @@ function positionOverlay(
     if (alignPoint) {
         overlay.style.left = `${mousePos.x}px`;
         overlay.style.top = `${mousePos.y}px`;
+        clampToViewport(overlay);
         return;
     }
 
@@ -85,6 +115,8 @@ function positionOverlay(
             overlay.style.top = `${rect.top + scrollY - 4}px`;
             break;
     }
+
+    clampToViewport(overlay);
 }
 
 export default function Dropdown({
