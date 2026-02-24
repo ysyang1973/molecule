@@ -97,6 +97,7 @@ interface ISerializablePanel {
     icon?: string;
     hidden?: boolean;
     closable?: boolean;
+    sortIndex?: number;
     data?: unknown;
 }
 
@@ -112,6 +113,7 @@ function serializePanel(item: IPanelItem<any>): ISerializablePanel {
         ...(typeof item.icon === 'string' ? { icon: item.icon } : {}),
         ...(item.hidden ? { hidden: true } : {}),
         ...(item.closable !== undefined ? { closable: item.closable } : {}),
+        ...(item.sortIndex !== undefined ? { sortIndex: item.sortIndex } : {}),
     };
 
     if (item.data !== undefined) {
@@ -263,9 +265,9 @@ export const ExtendsEditorWorkspace: IExtension = {
         }
 
         // ===================== AUXILIARY & PANEL RESTORE (deferred) =====================
-        // Deferred via queueMicrotask to ensure all controllers (e.g. OutputController
-        // adding "Output" panel) and other extensions have finished synchronous init.
-        window.queueMicrotask(() => {
+        // Deferred via setTimeout to ensure all controllers (e.g. OutputController
+        // adding "Output" panel), extensions, and their microtasks have fully completed.
+        setTimeout(() => {
             // --- Auxiliary Restore ---
             const storedAux = getValue(AUXILIARY_BAR_STORE_KEY);
             if (storedAux) {
@@ -283,13 +285,25 @@ export const ExtendsEditorWorkspace: IExtension = {
                         }));
 
                         molecule.auxiliaryBar.dispatch((draft: AuxiliaryModel) => {
-                            const existingIds = new Set(draft.data.map((d) => d.id));
+                            const existingById = new Map(draft.data.map((d) => [d.id, d]));
+                            const merged: IAuxiliaryData[] = [];
+                            const seen = new Set<UniqueId>();
+
                             for (const item of items) {
-                                if (!existingIds.has(item.id)) {
-                                    existingIds.add(item.id);
-                                    draft.data.push(item);
+                                if (seen.has(item.id)) continue;
+                                seen.add(item.id);
+                                merged.push(existingById.get(item.id) ?? item);
+                            }
+
+                            for (const existing of draft.data) {
+                                if (!seen.has(existing.id)) {
+                                    merged.push(existing);
                                 }
                             }
+
+                            draft.data.length = 0;
+                            draft.data.push(...merged);
+
                             if (auxBar.current) {
                                 draft.current = auxBar.current;
                             }
@@ -317,6 +331,7 @@ export const ExtendsEditorWorkspace: IExtension = {
                             icon: item.icon,
                             hidden: item.hidden,
                             closable: item.closable,
+                            sortIndex: item.sortIndex,
                             data: item.data,
                             render(self) {
                                 return React.createElement('pre', { style: { margin: 0 } }, String(self?.name ?? ''));
@@ -324,13 +339,28 @@ export const ExtendsEditorWorkspace: IExtension = {
                         }));
 
                         molecule.panel.dispatch((draft: PanelModel) => {
-                            const existingIds = new Set(draft.data.map((d) => d.id));
+                            // Build a map of existing items (with real render functions)
+                            const existingById = new Map(draft.data.map((d) => [d.id, d]));
+                            const merged: IPanelItem[] = [];
+                            const seen = new Set<UniqueId>();
+
+                            // Follow saved order, preferring existing items (they have real render)
                             for (const item of items) {
-                                if (!existingIds.has(item.id)) {
-                                    existingIds.add(item.id);
-                                    draft.data.push(item);
+                                if (seen.has(item.id)) continue;
+                                seen.add(item.id);
+                                merged.push(existingById.get(item.id) ?? item);
+                            }
+
+                            // Append any existing items not in saved data
+                            for (const existing of draft.data) {
+                                if (!seen.has(existing.id)) {
+                                    merged.push(existing);
                                 }
                             }
+
+                            draft.data.length = 0;
+                            draft.data.push(...merged);
+
                             if (panelData.current) {
                                 draft.current = panelData.current;
                             }
