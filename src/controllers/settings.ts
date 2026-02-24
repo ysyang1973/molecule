@@ -1,6 +1,8 @@
+import { SETTINGS_STORE_KEY } from 'mo/const';
 import { BaseController } from 'mo/glue';
 import { SettingsService } from 'mo/services/setting';
 import { flatObject } from 'mo/utils';
+import { getValue } from 'mo/utils/storage';
 import { inject, injectable } from 'tsyringe';
 
 export interface ISettingsController extends BaseController {}
@@ -14,7 +16,15 @@ export class SettingsController extends BaseController implements ISettingsContr
 
     private initView() {
         import('../const/options').then((options) => {
-            this.settings.update(flatObject({ editor: options.default }));
+            const defaults = flatObject({ editor: options.default });
+            const stored = getValue(SETTINGS_STORE_KEY);
+            if (stored) {
+                try {
+                    const saved = JSON.parse(stored);
+                    Object.assign(defaults, saved);
+                } catch {}
+            }
+            this.settings.update(defaults);
         });
     }
 }

@@ -9,11 +9,17 @@ $breadcrumb: BEMElement($group, 'breadcrumb');
 
 // Used for autoScroll to active one
 $active: BEMModifier($editor, 'active');
+$focused: BEMModifier($group, 'focused');
 
 .#{$group} {
     height: 100%;
     position: relative;
     width: 100%;
+
+    // Unfocused group: override tab top border to unfocused variant
+    &:not(.#{$focused}) {
+        --tab-activeBorderTop: var(--tab-unfocusedActiveBorderTop, transparent);
+    }
 
     .#{$header} {
         background: var(--editorGroupHeader-tabsBackground);
@@ -42,6 +48,7 @@ $active: BEMModifier($editor, 'active');
 :export {
     group: $group;
     active: $active;
+    focused: $focused;
     header: $header;
     tab: $tab;
     breadcrumb: $breadcrumb;

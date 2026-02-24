@@ -12,6 +12,7 @@ import ExpandSelectionAction from './expandSelection';
 import FindAction from './find';
 import MoveLineDownAction from './moveLineDown';
 import MoveLineUpAction from './moveLineUp';
+import NewFileAction from './newFile';
 import PasteAction from './paste';
 import { QuickAccessCommandAction } from './quickAccessCommandAction';
 import { QuickAccessSettingsAction } from './quickAccessSettingsAction';
@@ -58,6 +59,7 @@ export const ExtendsActions: IExtension = {
             QuickAccessSettingsAction,
             QuickAccessCommandAction,
             QuickSelectLocaleAction,
+            NewFileAction,
         ],
     },
     activate: function (molecule): void {
@@ -102,7 +104,23 @@ export const ExtendsActions: IExtension = {
             .with(SelectHighlightsAction)
             .exhaust();
 
+        // Prevent Ctrl+N from being captured by Chrome (new window).
+        // Monaco only intercepts keybindings when its editor has focus.
+        // This global handler ensures preventDefault is always called,
+        // and executes the action manually when Monaco didn't handle it.
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.code === 'KeyN') {
+                // If Monaco already handled it (editor focused), just ensure preventDefault
+                if (e.defaultPrevented) {
+                    return;
+                }
+                e.preventDefault();
+                molecule.action.execute(NewFileAction.ID);
+            }
+        });
+
         // update menu's keybinding
+        updateMenuKeybinding(NewFileAction.ID);
         updateMenuKeybinding(QuickAccessCommandAction.ID);
         updateMenuKeybinding(QuickTogglePanelAction.ID);
         updateMenuKeybinding(QuickToggleSidebarAction.ID);

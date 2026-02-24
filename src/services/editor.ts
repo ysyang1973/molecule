@@ -348,20 +348,31 @@ export class EditorService extends BaseService<EditorModel> {
      * @param groupId If provided, will open tab in specific group
      */
     public open(tab: IEditorTab<any>, groupId?: UniqueId) {
+        // Use current group if groupId is not provided
+        const targetGroupId = groupId ?? this.getCurrent();
+        const targetGroup = this.getGroup(targetGroupId);
+
         // If not found the group, create a new group
-        if (!this.getGroup(groupId)) {
+        if (!targetGroup) {
             this.addGroup(tab);
             const last = this.getGroups().at(-1);
             if (last) {
                 this.setCurrentGroup(last.id);
             }
         } else {
-            this.addTab(tab, groupId as UniqueId);
-            this.setCurrent(tab.id, groupId as UniqueId);
+            this.addTab(tab, targetGroupId as UniqueId);
+            this.setCurrent(tab.id, targetGroupId as UniqueId);
         }
 
         // ===================== effects =====================
         this.emit(EditorEvent.onOpenTab, tab);
+    }
+
+    public renameTab(tabId: UniqueId, groupId: UniqueId, name: string) {
+        this.updateTab({ id: tabId, name }, groupId);
+
+        // ===================== effects =====================
+        this.emit(EditorEvent.onRenameTab, tabId, groupId, name);
     }
 
     // ===================== Subscriptions =====================
@@ -477,5 +488,9 @@ export class EditorService extends BaseService<EditorModel> {
 
     public onCurrentChange(callback: (prev: Partial<TabGroup>, next: Partial<TabGroup>) => void) {
         this.subscribe(EditorEvent.onCurrentChange, callback);
+    }
+
+    public onRenameTab(callback: (tabId: UniqueId, groupId: UniqueId, name: string) => void) {
+        this.subscribe(EditorEvent.onRenameTab, callback);
     }
 }

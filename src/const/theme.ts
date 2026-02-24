@@ -469,7 +469,7 @@ export class DefaultColor {
         const TAB_LAST_PINNED_BORDER = this.registerColor('tab.lastPinnedBorder', { dark: treeIndentGuidesStroke, light: treeIndentGuidesStroke, hcDark: contrastBorder, hcLight: contrastBorder });
         const TAB_ACTIVE_BORDER = this.registerColor('tab.activeBorder', { dark: null, light: null, hcDark: null, hcLight: null });
         const TAB_UNFOCUSED_ACTIVE_BORDER = this.registerColor('tab.unfocusedActiveBorder', { dark: transparent(TAB_ACTIVE_BORDER, 0.5), light: transparent(TAB_ACTIVE_BORDER, 0.7), hcDark: null, hcLight: null });
-        const TAB_ACTIVE_BORDER_TOP = this.registerColor('tab.activeBorderTop', { dark: null, light: null, hcDark: null, hcLight: '#B5200D' });
+        const TAB_ACTIVE_BORDER_TOP = this.registerColor('tab.activeBorderTop', { dark: '#e7e7e7', light: '#424242', hcDark: null, hcLight: '#B5200D' });
         const TAB_UNFOCUSED_ACTIVE_BORDER_TOP = this.registerColor('tab.unfocusedActiveBorderTop', { dark: transparent(TAB_ACTIVE_BORDER_TOP, 0.5), light: transparent(TAB_ACTIVE_BORDER_TOP, 0.7), hcDark: null, hcLight: '#B5200D' });
         const TAB_HOVER_BORDER = this.registerColor('tab.hoverBorder', { dark: null, light: null, hcDark: null, hcLight: null });
         const TAB_UNFOCUSED_HOVER_BORDER = this.registerColor('tab.unfocusedHoverBorder', { dark: transparent(TAB_HOVER_BORDER, 0.5), light: transparent(TAB_HOVER_BORDER, 0.7), hcDark: null, hcLight: contrastBorder });

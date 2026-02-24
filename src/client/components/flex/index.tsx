@@ -6,7 +6,7 @@ import variables from './index.scss';
 
 export interface IFlexProps
     extends HTMLElementProps,
-        Pick<HTMLAttributes<HTMLDivElement>, 'tabIndex' | 'onClick' | 'onContextMenu' | 'onDragEnter' | 'onDragLeave'> {
+        Pick<HTMLAttributes<HTMLDivElement>, 'tabIndex' | 'onClick' | 'onDoubleClick' | 'onContextMenu' | 'onDragEnter' | 'onDragLeave'> {
     alignItems?: CSSProperties['alignItems'];
     justifyContent?: CSSProperties['justifyContent'];
     ref?: React.Ref<HTMLElement>;

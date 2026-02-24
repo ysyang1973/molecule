@@ -55,7 +55,12 @@ export const ExtendsEditor: IExtension = {
         molecule.editor.onSplitEditorRight((activeTabId, groupId) => {
             const tab = molecule.editor.getTab(activeTabId, groupId);
             if (!tab) return;
-            molecule.editor.open(tab);
+            molecule.editor.addGroup(tab);
+            const groups = molecule.editor.getGroups();
+            const last = groups.at(-1);
+            if (last) {
+                molecule.editor.setCurrentGroup(last.id);
+            }
         });
 
         molecule.editor.onSelectTab((tabId, groupId) => {

@@ -14,6 +14,7 @@ export interface IGroupProps {
     group: EditorGroupModel;
     options: EditorModel['options'];
     toolbar?: IMenuItemProps[];
+    focused?: boolean;
     onMount?: (groupId: UniqueId, editorInstance: editor.IStandaloneCodeEditor) => void;
     onModelMount?: (tabId: UniqueId, groupId: UniqueId, model: editor.ITextModel) => void;
     onDiffEditorMount?: (groupId: UniqueId, editorInstance: editor.IStandaloneDiffEditor) => void;
@@ -25,6 +26,8 @@ export interface IGroupProps {
     onContextMenu?: EditorContextMenu;
     onToolbarClick?: GroupMenuHandler;
     onCloseTab?: (tabId: UniqueId, groupId: UniqueId) => void;
+    onRenameTab?: (tabId: UniqueId, groupId: UniqueId, name: string) => void;
+    onNewTab?: () => void;
 }
 
 const MonacoEditor = lazy(() => import('../../components/monaco'));
@@ -34,6 +37,7 @@ export default function Group({
     group,
     options,
     toolbar,
+    focused,
     onSelectTab,
     onMount,
     onModelMount,
@@ -42,6 +46,8 @@ export default function Group({
     onContextMenu,
     onToolbarClick,
     onCloseTab,
+    onRenameTab,
+    onNewTab,
 }: IGroupProps) {
     const viewState = useRef(new WeakMap());
     const tab = group.data.find(searchById(group.activeTab));
@@ -127,7 +133,7 @@ export default function Group({
     if (!tab) return null;
 
     return (
-        <div className={variables.group}>
+        <div className={classNames(variables.group, focused && variables.focused)}>
             <Header
                 scrollIntoViewDeps={{
                     dep: group.activeTab,
@@ -136,6 +142,10 @@ export default function Group({
                 className={variables.header}
                 trackStyle={{ height: 3 }}
                 extra={<ActionBar data={toolbar} onClick={(item) => onToolbarClick?.(item, group.id)} />}
+                onDoubleClick={(e) => {
+                    if ((e.target as HTMLElement).closest(`.${variables.tab}`)) return;
+                    onNewTab?.();
+                }}
             >
                 {group.data.map((tab) => {
                     const active = group.activeTab === tab.id;
@@ -149,6 +159,7 @@ export default function Group({
                             onContextMenu={onContextMenu}
                             onClose={onCloseTab}
                             onClick={onSelectTab}
+                            onRename={onRenameTab}
                         />
                     );
                 })}

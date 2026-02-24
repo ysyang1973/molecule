@@ -1,5 +1,4 @@
 import { IExtension } from 'mo/types';
-import { randomId } from 'mo/utils';
 
 export const ExtendsMenuBar: IExtension = {
     id: 'ExtendsMenuBar',
@@ -13,21 +12,9 @@ export const ExtendsMenuBar: IExtension = {
                 MENUBAR_ITEM_STATUSBAR,
                 MENUBAR_ITEM_ACTIVITYBAR,
                 MENUBAR_ITEM_AUXILIARY,
-                MENUBAR_ITEM_CREATE_FILE,
             } = molecule.builtin.getState().constants;
 
             switch (menuId) {
-                case MENUBAR_ITEM_CREATE_FILE: {
-                    const tabId = `new_editor_${randomId()}`;
-                    molecule.editor.open({
-                        id: tabId,
-                        name: 'Untitled',
-                        icon: 'file',
-                        value: '',
-                        language: 'sql',
-                    });
-                    break;
-                }
                 case MENUBAR_ITEM_PANEL: {
                     molecule.layout.setPanel((prev) => !prev);
                     break;

@@ -3,6 +3,7 @@ import { ExtendsActivityBar } from './activityBar';
 import { ExtendsAuxiliaryBar } from './auxiliaryBar';
 import { ExtendsContextMenu } from './contextMenu';
 import { ExtendsEditor } from './editor';
+import { ExtendsEditorWorkspace } from './editorWorkspace';
 import { ExtendsEditorTree } from './editorTree';
 import { ExtendsExplorer } from './explorer';
 import { ExtendsFolderTree } from './folderTree';
@@ -34,4 +35,5 @@ export default [
     ExtendsExplorer,
     ExtendsContextMenu,
     ExtendsAuxiliaryBar,
+    ExtendsEditorWorkspace,
 ];

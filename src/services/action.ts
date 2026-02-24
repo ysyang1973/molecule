@@ -7,6 +7,7 @@ import {
     CommandsRegistry,
     ContextKeyExpr,
     DisposableStore,
+    IQuickInputService,
     KeybindingsRegistry,
     MenuId,
     MenuRegistry,
@@ -105,12 +106,21 @@ export class ActionService extends BaseService<ActionModel> {
             CommandsRegistry.registerCommand({
                 id: command.id,
                 handler: (accessor: any, ...args: any) => {
-                    const ctx = this.getContext();
+                    // Wrap accessor so that IQuickInputService resolves to our local
+                    // instance (which uses the correct ILayoutService/container) instead
+                    // of the global StandaloneServices one.
+                    const wrapped = Object.create(accessor, {
+                        get: {
+                            value: (id: any) => {
+                                if (id === IQuickInputService) {
+                                    return this.monaco.QuickInputService;
+                                }
+                                return accessor.get(id);
+                            },
+                        },
+                    });
 
-                    // Ensure the hidden editor has focus when QuickInputService operations are needed
-                    ctx.keyboardFocus.ensureQuickInputContext();
-
-                    action.run(accessor, ...args);
+                    action.run(wrapped, ...args);
                 },
                 description,
             })

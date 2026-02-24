@@ -29,6 +29,7 @@ export enum EditorEvent {
     onDiffEditorMount = 'editor.onDiffEditorMount',
     onDiffEditorModelMount = 'editor.onDiffEditorModelMount',
     onCurrentChange = 'editor.onCurrentChange',
+    onRenameTab = 'editor.onRenameTab',
 }
 
 export class EditorGroupModel<T = any> {

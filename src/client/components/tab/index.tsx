@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { classNames } from 'mo/client/classNames';
 import type { ContextMenuHandler, IEditorTab, TabGroup, UniqueId } from 'mo/types';
@@ -16,6 +17,7 @@ export interface ITabProps {
     onContextMenu?: ContextMenuHandler<[tabId: UniqueId, groupId: UniqueId]>;
     onClick?: (tabId: UniqueId, groupId: UniqueId) => void;
     onClose?: (tabId: UniqueId, groupId: UniqueId) => void;
+    onRename?: (tabId: UniqueId, groupId: UniqueId, name: string) => void;
 }
 
 export default function Tab({
@@ -26,7 +28,12 @@ export default function Tab({
     onContextMenu,
     onClick,
     onClose,
+    onRename,
 }: ITabProps) {
+    const [editing, setEditing] = useState(false);
+    const [editValue, setEditValue] = useState(String(data.name ?? ''));
+    const inputRef = useRef<HTMLInputElement>(null);
+
     const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
         id: `tab-drag-${groupId}-${data.id}`,
         data: { tabId: data.id, groupId } satisfies TabGroup,
@@ -40,6 +47,35 @@ export default function Tab({
     const setRef = (node: HTMLDivElement | null) => {
         setDragRef(node);
         setDropRef(node);
+    };
+
+    useEffect(() => {
+        if (editing) {
+            inputRef.current?.focus();
+            inputRef.current?.select();
+        }
+    }, [editing]);
+
+    const handleDoubleClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditValue(String(data.name ?? ''));
+        setEditing(true);
+    };
+
+    const commitRename = () => {
+        setEditing(false);
+        const trimmed = editValue.trim();
+        if (trimmed && trimmed !== String(data.name ?? '')) {
+            onRename?.(data.id, groupId, trimmed);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            commitRename();
+        } else if (e.key === 'Escape') {
+            setEditing(false);
+        }
     };
 
     return (
@@ -59,7 +95,21 @@ export default function Tab({
         >
             <Flex style={{ height: '100%', gap: 4 }}>
                 <Icon type={data.icon} />
-                <span className={variables.name}>{data.name}</span>
+                {editing ? (
+                    <input
+                        ref={inputRef}
+                        className={variables.renameInput}
+                        value={editValue}
+                        size={Math.max(1, editValue.length)}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={commitRename}
+                        onKeyDown={handleKeyDown}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                    />
+                ) : (
+                    <span className={variables.name} onDoubleClick={handleDoubleClick}>{data.name}</span>
+                )}
                 <section className={classNames(variables.extra, data.modified && variables.extraActive)}>
                     <Close
                         modified={data.modified}

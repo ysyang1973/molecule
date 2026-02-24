@@ -16,6 +16,7 @@ export interface IHeaderProps {
     trackStyle?: CSSProperties;
     scrollIntoViewDeps?: IScrollbarProps['scrollIntoViewDeps'];
     onClick?: React.MouseEventHandler<HTMLDivElement>;
+    onDoubleClick?: React.MouseEventHandler<HTMLDivElement>;
     onContextMenu?: React.MouseEventHandler<HTMLDivElement>;
 }
 
@@ -28,6 +29,7 @@ export default function Header({
     scrollIntoViewDeps,
     children,
     onClick,
+    onDoubleClick,
     onContextMenu,
 }: PropsWithChildren<IHeaderProps>) {
     const [container, { width }] = useMeasure<HTMLDivElement>();
@@ -37,6 +39,7 @@ export default function Header({
         <Flex
             className={classNames(variables.header, className)}
             onClick={onClick}
+            onDoubleClick={onDoubleClick}
             onContextMenu={onContextMenu}
             ref={container}
         >

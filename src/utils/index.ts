@@ -117,7 +117,7 @@ export function convertToCSSVars(colors: Record<string, string | null>): string 
                     const color = colors[id];
                     if (!color) return '';
                     const colorName = id.replace('.', '-');
-                    return `--${colorName}: ${color};`;
+                    return `--${colorName}: ${color};\n--vscode-${colorName}: ${color};`;
                 })
                 .filter(Boolean)
                 .join('\n')}

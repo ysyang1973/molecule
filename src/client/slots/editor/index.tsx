@@ -20,6 +20,8 @@ export default function Editor({
     onContextMenu,
     onToolbarClick,
     onCloseTab,
+    onRenameTab,
+    onNewTab,
     onDragStart,
     onDragEnd,
     onDragEnter,
@@ -80,6 +82,7 @@ export default function Editor({
                                 group={g}
                                 toolbar={toolbar}
                                 options={options}
+                                focused={current === g.id}
                                 onMount={onMount}
                                 onModelMount={onModelMount}
                                 onDiffEditorMount={onDiffEditorMount}
@@ -88,6 +91,8 @@ export default function Editor({
                                 onContextMenu={onContextMenu}
                                 onToolbarClick={onToolbarClick}
                                 onCloseTab={onCloseTab}
+                                onRenameTab={onRenameTab}
+                                onNewTab={onNewTab}
                             />
                         </Split.Pane>
                     ))}

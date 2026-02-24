@@ -2,6 +2,7 @@ import { BaseController } from 'mo/glue';
 import { EditorEvent } from 'mo/models/editor';
 import { SettingsEvent } from 'mo/models/setting';
 import type { editor } from 'mo/monaco';
+import { ActionService } from 'mo/services/action';
 import { BuiltinService } from 'mo/services/builtin';
 import { EditorService } from 'mo/services/editor';
 import { LayoutService } from 'mo/services/layout';
@@ -19,6 +20,7 @@ export interface IEditorController extends BaseController {
     onSelectTab?: (tabId: UniqueId, group: UniqueId) => void;
     onFocus?: (instance: editor.IStandaloneCodeEditor) => void;
     onCloseTab?: (tabId: UniqueId, groupId: UniqueId) => void;
+    onRenameTab?: (tabId: UniqueId, groupId: UniqueId, name: string) => void;
     onDragStart?: (tabId: UniqueId, groupId: UniqueId) => void;
     onDragEnd?: (tabId: UniqueId, groupId: UniqueId) => void;
     onDragEnter?: (from: TabGroup, to: TabGroup) => void;
@@ -29,6 +31,7 @@ export interface IEditorController extends BaseController {
     onCursorSelection?: (instance: editor.IStandaloneCodeEditor, ev: editor.ICursorSelectionChangedEvent) => void;
     onContextMenu?: EditorContextMenu;
     onToolbarClick?: GroupMenuHandler;
+    onNewTab?: () => void;
 }
 
 @injectable()
@@ -36,7 +39,8 @@ export class EditorController extends BaseController implements IEditorControlle
     constructor(
         @inject('layout') private layout: LayoutService,
         @inject('editor') private editor: EditorService,
-        @inject('builtin') private builtin: BuiltinService
+        @inject('builtin') private builtin: BuiltinService,
+        @inject('action') private action: ActionService
     ) {
         super();
         this.initView();
@@ -65,6 +69,10 @@ export class EditorController extends BaseController implements IEditorControlle
         // Emit onFocus event handler
         editorInstance.onDidFocusEditorText(() => {
             this.onFocus(editorInstance);
+            // Update the current group when user focuses on an editor in a different group
+            if (this.editor.getCurrent() !== groupId) {
+                this.editor.setCurrentGroup(groupId);
+            }
         });
 
         // Emit onCursorSelection event handler
@@ -126,6 +134,14 @@ export class EditorController extends BaseController implements IEditorControlle
 
     public onCloseTab: IEditorController['onCloseTab'] = (tabId, groupId) => {
         this.emit(EditorEvent.onCloseTab, tabId, groupId);
+    };
+
+    public onRenameTab: IEditorController['onRenameTab'] = (tabId, groupId, name) => {
+        this.editor.renameTab(tabId, groupId, name);
+    };
+
+    public onNewTab: IEditorController['onNewTab'] = () => {
+        this.action.execute('menuBar.item.createFile');
     };
 
     public onDragStart: (tabId: UniqueId, groupId: UniqueId) => void = (tabId, groupId) => {

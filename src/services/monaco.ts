@@ -214,7 +214,6 @@ export class MonacoService {
             );
         }
 
-        const quickInputService = instantiationService.createInstance(QuickInputService);
         const layoutService = new EditorScopedLayoutService(
             this.container,
             StaticServices.codeEditorService.get(ICodeEditorService)
@@ -222,6 +221,17 @@ export class MonacoService {
 
         // Override layoutService
         services.set(ILayoutService, layoutService);
+
+        // Create QuickInputService with the custom layoutService so it renders
+        // in the app container instead of the default (off-screen) container.
+        // Also register the QuickInputService back into childServices so that
+        // the lazy QuickAccessController (created inside QuickInputService)
+        // resolves to this same local instance instead of the global one.
+        const childServices = new ServiceCollection();
+        childServices.set(ILayoutService, layoutService);
+        const childInstantiationService = instantiationService.createChild(childServices);
+        const quickInputService = childInstantiationService.createInstance(QuickInputService);
+        childServices.set(IQuickInputService, quickInputService);
 
         // Override quickPickService
         services.set(IQuickInputService, quickInputService);
