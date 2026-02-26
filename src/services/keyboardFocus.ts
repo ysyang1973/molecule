@@ -37,6 +37,7 @@ export class KeyboardFocusService extends BaseService {
     private _globalKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
     private _services: ServiceCollection | null = null;
     private _isRedispatching = false;
+    private _chordModeTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor() {
         super('keyboardFocus');
@@ -255,7 +256,22 @@ export class KeyboardFocusService extends BaseService {
         }
 
         // For non-QuickInput scenarios, only handle events with modifier keys
-        if (!(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey)) return;
+        if (!(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey)) {
+            // If in chord mode (waiting for second key after e.g., Ctrl+K),
+            // forward non-modifier keys to the hidden editor so Monaco can complete the chord
+            if (this._chordModeTimer !== null) {
+                this.clearChordMode();
+                const target = e.target as HTMLElement;
+                if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+                    return;
+                }
+                if (this._hiddenEditor?.hasTextFocus() || this._focusedEditor?.hasTextFocus()) {
+                    return;
+                }
+                this.redispatchToHiddenEditor(e);
+            }
+            return;
+        }
 
         // Skip pure modifier key presses (e.g., pressing Ctrl alone)
         if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
@@ -280,7 +296,15 @@ export class KeyboardFocusService extends BaseService {
 
         console.log(`[KeyboardFocus] ${keyCombo} → focusing hidden editor and re-dispatching`);
 
-        // Focus the hidden editor
+        // Focus the hidden editor and re-dispatch
+        this.redispatchToHiddenEditor(e);
+
+        // Enter chord mode so subsequent non-modifier key presses (e.g., M after Ctrl+K)
+        // can be forwarded to the hidden editor even if it loses focus
+        this.enterChordMode();
+    }
+
+    private redispatchToHiddenEditor(e: KeyboardEvent): void {
         this.ensureQuickInputContext();
 
         // Re-dispatch the key event to the hidden editor's textarea so Monaco can
@@ -304,10 +328,23 @@ export class KeyboardFocusService extends BaseService {
             });
             const consumed = !textarea.dispatchEvent(clone);
             this._isRedispatching = false;
-            console.log(`[KeyboardFocus] ${keyCombo} → re-dispatched to Monaco, consumed=${consumed}`);
             if (consumed) {
                 e.preventDefault();
             }
+        }
+    }
+
+    private enterChordMode(): void {
+        this.clearChordMode();
+        this._chordModeTimer = setTimeout(() => {
+            this._chordModeTimer = null;
+        }, 5000);
+    }
+
+    private clearChordMode(): void {
+        if (this._chordModeTimer !== null) {
+            clearTimeout(this._chordModeTimer);
+            this._chordModeTimer = null;
         }
     }
 }
