@@ -152,10 +152,11 @@ export default function Dropdown({
     );
 
     // Trigger events
+    // Use capture phase for click trigger so that child stopPropagation() doesn't block us
     const triggerEvents: Record<string, (e: React.MouseEvent) => void> = {};
 
     if (trigger === 'click') {
-        triggerEvents.onClick = (e: React.MouseEvent) => {
+        triggerEvents.onClickCapture = (e: React.MouseEvent) => {
             if (stopPropagation) e.stopPropagation();
             if (alignPoint) mousePos.current = { x: e.clientX, y: e.clientY };
             updateVisible(!isVisible);

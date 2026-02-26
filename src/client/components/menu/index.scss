@@ -23,6 +23,7 @@ $disabled: BEMModifier($item, 'disabled');
     color: var(--menu-foreground);
     font-size: 13px;
     min-width: 160px;
+    width: max-content;
     max-height: 841px;
     overflow-x: hidden;
     overflow-y: auto;
@@ -110,6 +111,7 @@ $disabled: BEMModifier($item, 'disabled');
         display: flex;
         justify-content: end;
         gap: 2px;
+        white-space: nowrap;
     }
 
     .#{$keybindingItem} {
