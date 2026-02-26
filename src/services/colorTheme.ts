@@ -80,25 +80,23 @@ export class ColorThemeService extends BaseService<ColorThemeModel> {
 
     private predict: UniqueId | undefined = undefined;
     private applyColorTheme(id: UniqueId) {
-        if (this._grammarLock) {
-            this.predict = id;
-            return;
-        }
         const theme = this.get(id);
         if (!theme) return;
+
+        // Inject CSS variables synchronously so they're available before React renders
         const styleSheetContent = convertToCSSVars(theme.colors || {});
-        window.requestAnimationFrame(() => {
-            const styleEle = document.querySelector<HTMLStyleElement>(`.${ColorThemeService.DEFAULT_THEME_CLASS_NAME}`);
-            if (!styleEle) {
-                const elStyle = document.createElement('style');
-                elStyle.type = 'text/css';
-                elStyle.className = ColorThemeService.DEFAULT_THEME_CLASS_NAME;
-                elStyle.innerHTML = styleSheetContent;
-                document.head.appendChild(elStyle);
-            } else {
-                styleEle.innerHTML = styleSheetContent;
-            }
-        });
+        const styleEle = document.querySelector<HTMLStyleElement>(`.${ColorThemeService.DEFAULT_THEME_CLASS_NAME}`);
+        if (!styleEle) {
+            const elStyle = document.createElement('style');
+            elStyle.type = 'text/css';
+            elStyle.className = ColorThemeService.DEFAULT_THEME_CLASS_NAME;
+            elStyle.innerHTML = styleSheetContent;
+            document.head.appendChild(elStyle);
+        } else {
+            styleEle.innerHTML = styleSheetContent;
+        }
+
+        // Register Monaco theme immediately (independent of grammar loading)
         editor.defineTheme(ColorThemeService.DEFAULT_THEME_CLASS_NAME, {
             inherit: true,
             base: theme.uiTheme || 'vs-dark',
@@ -107,6 +105,11 @@ export class ColorThemeService extends BaseService<ColorThemeModel> {
         });
         editor.setTheme(ColorThemeService.DEFAULT_THEME_CLASS_NAME);
 
+        // Defer only textmate CSS injection while grammar is loading
+        if (this._grammarLock) {
+            this.predict = id;
+            return;
+        }
         this.textmateRegistry?.injectCSS();
     }
 
@@ -118,6 +121,11 @@ export class ColorThemeService extends BaseService<ColorThemeModel> {
                 draft.data.push(next);
             });
         });
+        // Apply CSS immediately if the current theme was just added
+        const current = this.getCurrent();
+        if (current) {
+            this.applyColorTheme(current);
+        }
     }
 
     public update(theme: RequiredId<IColorTheme>): void;

@@ -5,6 +5,7 @@ export enum PanelEvent {
     onToolbarClick = 'panel.onToolbarClick',
     onClose = 'panel.onClose',
     onContextMenu = 'panel.onContextMenu',
+    onDrop = 'panel.onDrop',
 }
 
 export interface IPanelItem<T = any> extends IterableItem, Render<IPanelItem<T>> {

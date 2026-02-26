@@ -4,8 +4,6 @@ import {
     CATEGORIES,
     IQuickInputService,
     IQuickPickItem,
-    KeyCode,
-    KeyMod,
     localize,
     QuickPickInput,
     ServicesAccessor,
@@ -23,10 +21,6 @@ export default class QuickSelectLocaleAction extends BaseAction {
             category: CATEGORIES.Preferences,
             precondition: undefined,
             f1: true,
-            keybinding: {
-                when: undefined,
-                primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyL,
-            },
         });
     }
 

@@ -14,6 +14,7 @@ import {
     ILanguageService,
     IModelService,
     INotificationService,
+    IQuickInputService,
     IStandaloneThemeService,
     ServiceCollection,
     StandaloneEditor,
@@ -81,8 +82,11 @@ export class KeyboardFocusService extends BaseService {
         const isFocused = this._hiddenEditor.hasTextFocus();
 
         // If the hidden editor fails to focus, try to refocus it
+        // But skip if a QuickInput is currently active (to avoid stealing its focus)
         window.requestAnimationFrame(() => {
             if (!isFocused) {
+                const quickInputService = this._services?.get(IQuickInputService);
+                if (quickInputService?.currentQuickInput) return;
                 this._hiddenEditor?.focus();
             }
         });
@@ -212,7 +216,41 @@ export class KeyboardFocusService extends BaseService {
     }
 
     private handleGlobalKeydown(e: KeyboardEvent): void {
-        // Only handle events with modifier keys
+        // When a QuickInput is active, handle arrow key navigation directly
+        // through our custom QuickInputService. We check currentQuickInput
+        // instead of relying on event target because the hidden editor's
+        // focusHiddenEditor() RAF callback can steal focus from the QuickInput,
+        // causing the event target to be outside .quick-input-widget.
+        if (this._services) {
+            const quickInputService = this._services.get(IQuickInputService);
+            const currentQuickInput = (quickInputService as any)?.currentQuickInput;
+            if (currentQuickInput) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    currentQuickInput.hide();
+                    return;
+                }
+
+                if (currentQuickInput.focus) {
+                    // QuickPickFocus enum: Next=4, Previous=5, NextPage=6, PreviousPage=7
+                    let focusAction: number | null = null;
+                    if (e.key === 'ArrowDown') focusAction = 4;
+                    else if (e.key === 'ArrowUp') focusAction = 5;
+                    else if (e.key === 'PageDown') focusAction = 6;
+                    else if (e.key === 'PageUp') focusAction = 7;
+
+                    if (focusAction !== null) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        currentQuickInput.focus(focusAction);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // For non-QuickInput scenarios, only handle events with modifier keys
         if (!(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey)) return;
         this.ensureQuickInputContext();
     }

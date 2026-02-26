@@ -10,9 +10,16 @@ import CopyLineUpAction from './copyLineUp';
 import CutAction from './cut';
 import ExpandSelectionAction from './expandSelection';
 import FindAction from './find';
+import FindInFilesAction from './findInFiles';
 import MoveLineDownAction from './moveLineDown';
 import MoveLineUpAction from './moveLineUp';
+import NavigateBackAction from './navigateBack';
+import NavigateForwardAction from './navigateForward';
+import NavigateToLastEditAction from './navigateToLastEdit';
+import { initNavigationHistory } from './navigationHistory';
 import NewFileAction from './newFile';
+import QuickOpenFileAction from './quickOpenFileAction';
+import QuickOpenViewAction from './quickOpenViewAction';
 import PasteAction from './paste';
 import { QuickAccessCommandAction } from './quickAccessCommandAction';
 import { QuickAccessSettingsAction } from './quickAccessSettingsAction';
@@ -23,6 +30,7 @@ import QuickTogglePanelAction from './quickTogglePanelAction';
 import QuickToggleSidebarAction from './quickToggleSideBarAction';
 import RedoAction from './redo';
 import ReplaceAction from './replace';
+import ReplaceInFilesAction from './replaceInFiles';
 import SelectAllAction from './selectAll';
 import SelectHighlightsAction from './selectHighlightsAction';
 import ShrinkSelectionAction from './shrinkSelection';
@@ -37,6 +45,9 @@ export const ExtendsActions: IExtension = {
         [IContributeType.Commands]: [
             UndoAction,
             RedoAction,
+            CutAction,
+            CopyAction,
+            PasteAction,
             SelectAllAction,
             CopyLineUpAction,
             CopyLineDownAction,
@@ -44,6 +55,8 @@ export const ExtendsActions: IExtension = {
             MoveLineDownAction,
             FindAction,
             ReplaceAction,
+            FindInFilesAction,
+            ReplaceInFilesAction,
             AddCursorAboveAction,
             AddCursorBelowAction,
             ExpandSelectionAction,
@@ -60,6 +73,11 @@ export const ExtendsActions: IExtension = {
             QuickAccessCommandAction,
             QuickSelectLocaleAction,
             NewFileAction,
+            QuickOpenFileAction,
+            QuickOpenViewAction,
+            NavigateBackAction,
+            NavigateForwardAction,
+            NavigateToLastEditAction,
         ],
     },
     activate: function (molecule): void {
@@ -77,6 +95,8 @@ export const ExtendsActions: IExtension = {
         appendActionGroupBy(molecule.builtin.getConstants().MENUBAR_ITEM_EDIT)
             .with(FindAction)
             .with(ReplaceAction)
+            .with(FindInFilesAction)
+            .with(ReplaceInFilesAction)
             .exhaust();
 
         appendActionGroupBy(molecule.builtin.getConstants().MENUBAR_ITEM_EDIT)
@@ -104,20 +124,28 @@ export const ExtendsActions: IExtension = {
             .with(SelectHighlightsAction)
             .exhaust();
 
-        // Prevent Ctrl+N from being captured by Chrome (new window).
-        // Monaco only intercepts keybindings when its editor has focus.
-        // This global handler ensures preventDefault is always called,
-        // and executes the action manually when Monaco didn't handle it.
+        // Go menu
+        initNavigationHistory(molecule);
+
+        appendActionGroupBy(molecule.builtin.getConstants().MENUBAR_ITEM_GO)
+            .with(NavigateBackAction)
+            .with(NavigateForwardAction)
+            .with(NavigateToLastEditAction)
+            .exhaust();
+
+        appendActionGroupBy(molecule.builtin.getConstants().MENUBAR_ITEM_GO)
+            .with(QuickOpenFileAction)
+            .with(QuickJumpToLineAction)
+            .exhaust();
+
+        // Capture phase handler to prevent Ctrl+P from opening browser print dialog.
         document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.code === 'KeyN') {
-                // If Monaco already handled it (editor focused), just ensure preventDefault
-                if (e.defaultPrevented) {
-                    return;
-                }
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.code === 'KeyP') {
                 e.preventDefault();
-                molecule.action.execute(NewFileAction.ID);
+                e.stopPropagation();
+                molecule.action.execute(QuickOpenFileAction.ID);
             }
-        });
+        }, true);
 
         // update menu's keybinding
         updateMenuKeybinding(NewFileAction.ID);
@@ -126,7 +154,18 @@ export const ExtendsActions: IExtension = {
         updateMenuKeybinding(QuickToggleSidebarAction.ID);
         updateMenuKeybinding(UndoAction.ID);
         updateMenuKeybinding(RedoAction.ID);
-        // updateMenuKeybinding(CutAction.ID);
+        updateMenuKeybinding(CutAction.ID);
+        updateMenuKeybinding(CopyAction.ID);
+        updateMenuKeybinding(PasteAction.ID);
+        updateMenuKeybinding(ToggleLineCommentAction.ID);
+        updateMenuKeybinding(ToggleBlockCommentAction.ID);
+        updateMenuKeybinding(FindInFilesAction.ID);
+        updateMenuKeybinding(ReplaceInFilesAction.ID);
+        updateMenuKeybinding(NavigateBackAction.ID);
+        updateMenuKeybinding(NavigateForwardAction.ID);
+        updateMenuKeybinding(NavigateToLastEditAction.ID);
+        updateMenuKeybinding(QuickOpenFileAction.ID);
+        updateMenuKeybinding(QuickJumpToLineAction.ID);
 
         function appendActionToSettingMenu(ctor: { ID: string }) {
             const keybinding = molecule.action.queryGlobalKeybinding(ctor.ID);

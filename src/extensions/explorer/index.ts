@@ -46,7 +46,7 @@ export const ExtendsExplorer: IExtension = {
 
             const target = contextMenu.find(searchById(panel.id));
             if (target) {
-                contextMenu = concatMenu([createMenuDuplicate(target)], contextMenu);
+                contextMenu = concatMenu([createMenuDuplicate(target, molecule.locale.localize)], contextMenu);
             }
             molecule.contextMenu.open(
                 contextMenu,

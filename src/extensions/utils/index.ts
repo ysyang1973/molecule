@@ -1,10 +1,10 @@
-import type { IMenuItemProps, IterableItem } from 'mo/types';
+import type { IMenuItemProps, IterableItem, Localize } from 'mo/types';
 
-export function createMenuDuplicate(item: IMenuItemProps): IMenuItemProps {
+export function createMenuDuplicate(item: IMenuItemProps, localize: Localize): IMenuItemProps {
     return {
         ...item,
         id: `${item.id}_duplicate`,
-        name: `隐藏 “${item.name}”`,
+        name: localize('contextMenu.hide', `Hide “${item.name}”`, item.name),
         icon: undefined,
         symbolic: item.id,
     };

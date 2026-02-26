@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { classNames } from 'mo/client/classNames';
 import { Dropdown, Icon } from 'mo/client/components';
 import { useConnector } from 'mo/client/hooks';
@@ -9,10 +9,33 @@ import variables from './index.scss';
 
 export type IMenuBarProps = IMenuBarController;
 
+/** Extract access key from menu name, e.g. "보기(V)" → "V" */
+function getAccessKey(name: unknown): string | undefined {
+    if (typeof name !== 'string') return undefined;
+    const match = name.match(/\(([A-Za-z])\)$/);
+    return match ? match[1].toUpperCase() : undefined;
+}
+
 export default function MenuBar({ onSelect, onContextMenu }: IMenuBarProps) {
     const menuBar = useConnector('menuBar');
 
     const [visibleMenu, setVisibleMenu] = useState<UniqueId | undefined>(undefined);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+            const key = e.key.toUpperCase();
+            for (const menu of menuBar.data) {
+                if (getAccessKey(menu.name) === key) {
+                    e.preventDefault();
+                    setVisibleMenu((prev) => (prev === menu.id ? undefined : menu.id));
+                    return;
+                }
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [menuBar.data]);
 
     const handleActiveDropdown = (menuId: UniqueId) => {
         if (visibleMenu && visibleMenu !== menuId) {

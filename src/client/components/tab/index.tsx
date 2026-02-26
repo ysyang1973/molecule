@@ -84,7 +84,8 @@ export default function Tab({
             className={classNames(
                 variables.tab,
                 active && variables.active,
-                (isDragging || isOver) && variables.dragging,
+                isDragging && variables.dragging,
+                isOver && !isDragging && variables.dropTarget,
                 className
             )}
             onContextMenu={(e) => onContextMenu?.({ x: e.pageX, y: e.pageY }, data.id, groupId)}

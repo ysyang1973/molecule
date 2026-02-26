@@ -1,5 +1,6 @@
 import { IExtension } from 'mo/types';
 import { concatMenu } from 'mo/utils';
+import { showConfirmDialog } from 'mo/utils/confirmDialog';
 
 export const ExtendsEditorTree: IExtension = {
     id: 'ExtendsEditorTree',
@@ -9,7 +10,25 @@ export const ExtendsEditorTree: IExtension = {
             molecule.editor.setCurrent(tabId, groupId);
         });
 
-        molecule.editorTree.onClose((tabId, groupId) => {
+        molecule.editorTree.onClose(async (tabId, groupId) => {
+            const tab = molecule.editor.getTab(tabId, groupId);
+            if (tab?.modified) {
+                const name = typeof tab.name === 'string' ? tab.name : String(tab.name ?? '');
+                const result = await showConfirmDialog({
+                    message: molecule.locale.localize(
+                        'editor.closeConfirm.single',
+                        `'${name}' has unsaved changes. Do you want to save the changes?`,
+                        name
+                    ),
+                    saveLabel: molecule.locale.localize('editor.closeConfirm.save', 'Save'),
+                    dontSaveLabel: molecule.locale.localize('editor.closeConfirm.dontSave', "Don't Save"),
+                    cancelLabel: molecule.locale.localize('editor.closeConfirm.cancel', 'Cancel'),
+                });
+                if (result === 'cancel') return;
+                if (result === 'save') {
+                    molecule.editor.saveTabs([tab.id], groupId);
+                }
+            }
             molecule.editor.closeTab(tabId, groupId);
         });
 

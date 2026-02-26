@@ -47,13 +47,17 @@ export const ExtendsPanel: IExtension = {
             }
         });
 
+        molecule.panel.onDrop((from, to) => {
+            molecule.panel.movePanel(from, to);
+        });
+
         molecule.panel.onContextMenu((pos, panelItem) => {
             const { PANEL_CONTEXTMENU = [] } = molecule.builtin.getModules();
             const data = molecule.panel.getState().data.concat().sort(sortByIndex);
             let contextMenu = concatMenu(createContextMenu(data), PANEL_CONTEXTMENU);
             const target = contextMenu.find((item) => item.id === panelItem?.id);
             if (target) {
-                contextMenu = concatMenu([createMenuDuplicate(target)], contextMenu);
+                contextMenu = concatMenu([createMenuDuplicate(target, molecule.locale.localize)], contextMenu);
             }
             molecule.contextMenu.open(
                 contextMenu,

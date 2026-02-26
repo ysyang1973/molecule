@@ -31,7 +31,7 @@ export const ExtendsActivityBar: IExtension = {
             );
             const target = contextMenu.find((item) => item.id === activityItem?.id);
             if (target) {
-                contextMenu = concatMenu([createMenuDuplicate(target)], contextMenu);
+                contextMenu = concatMenu([createMenuDuplicate(target, molecule.locale.localize)], contextMenu);
             }
             molecule.contextMenu.open(
                 contextMenu,

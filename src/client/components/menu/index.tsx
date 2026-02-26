@@ -1,5 +1,4 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { classNames } from 'mo/client/classNames';
 import type { IMenuItemProps, MenuHandler } from 'mo/types';
 import { sortByIndex } from 'mo/utils';
@@ -34,11 +33,7 @@ function MenuItemEl({ item, onClick }: { item: IMenuItemProps; onClick?: MenuHan
             </span>
             {item.keybinding && (
                 <span className={variables.keybinding}>
-                    {item.keybinding.split('').map((char, idx) => (
-                        <span key={idx} className={variables.keybindingItem}>
-                            {char}
-                        </span>
-                    ))}
+                    {item.keybinding}
                 </span>
             )}
         </div>
@@ -99,19 +94,18 @@ function SubMenuEl({ item, onClick }: { item: IMenuItemProps; onClick?: MenuHand
                     <Icon type="chevron-right" />
                 </span>
             </div>
-            {open &&
-                createPortal(
+            {open && (
                     <div
                         ref={popupRef}
                         className={variables.subMenuPopup}
+                        style={{ position: 'fixed' }}
                         onMouseEnter={handleOpen}
                         onMouseLeave={handleClose}
                     >
                         <div className={variables.container}>
                             <MenuList data={item.children} onClick={onClick} />
                         </div>
-                    </div>,
-                    document.body
+                    </div>
                 )}
         </div>
     );

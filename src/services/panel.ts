@@ -98,6 +98,28 @@ export class PanelService extends BaseService<PanelModel> {
         });
     }
 
+    public movePanel(from: UniqueId, to?: UniqueId | null): void {
+        if (from === to) return;
+        this.dispatch((draft) => {
+            const fromIdx = draft.data.findIndex(searchById(from));
+            if (fromIdx === -1) return;
+            const [item] = draft.data.splice(fromIdx, 1);
+            if (to != null) {
+                const newToIdx = draft.data.findIndex(searchById(to));
+                if (newToIdx === -1) {
+                    draft.data.push(item);
+                } else {
+                    draft.data.splice(newToIdx, 0, item);
+                }
+            } else {
+                draft.data.push(item);
+            }
+            draft.data.forEach((p, i) => {
+                p.sortIndex = i;
+            });
+        });
+    }
+
     public toggle(id: UniqueId): void {
         this.update(id, (prev) => ({ hidden: !prev.hidden }));
     }
@@ -121,5 +143,9 @@ export class PanelService extends BaseService<PanelModel> {
 
     public onContextMenu(callback: ContextMenuHandler<[item?: IPanelItem]>): void {
         this.subscribe(PanelEvent.onContextMenu, callback);
+    }
+
+    public onDrop(callback: (from: UniqueId, to: UniqueId | null) => void) {
+        this.subscribe(PanelEvent.onDrop, callback);
     }
 }

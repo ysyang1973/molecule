@@ -6,6 +6,7 @@ $name: BEMElement($tab, 'name');
 $renameInput: BEMElement($tab, 'renameInput');
 $active: BEMModifier($tab, 'active');
 $dragging: BEMModifier($tab, 'dragging');
+$dropTarget: BEMModifier($tab, 'dropTarget');
 $extraActive: BEMModifier($extra, 'active');
 
 .#{$tab} {
@@ -22,11 +23,19 @@ $extraActive: BEMModifier($extra, 'active');
     min-width: fit-content;
 
     &.#{$dragging} {
-        background-color: var(--editorGroup-dropBackground) !important;
-        outline: none !important;
+        opacity: 0.5;
+    }
 
-        > * {
-            pointer-events: none;
+    &.#{$dropTarget} {
+        &::before {
+            content: '';
+            position: absolute;
+            left: -1px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: var(--tab-activeBorder, var(--focusBorder));
+            z-index: 1;
         }
     }
 
@@ -87,5 +96,6 @@ $extraActive: BEMModifier($extra, 'active');
     renameInput: $renameInput;
     active: $active;
     dragging: $dragging;
+    dropTarget: $dropTarget;
     extraActive: $extraActive;
 }

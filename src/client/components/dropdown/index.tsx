@@ -179,7 +179,8 @@ export default function Dropdown({
             ) {
                 return;
             }
-            updateVisible(false);
+            // Delay close to allow click events in SubMenu portals to fire first
+            setTimeout(() => updateVisible(false), 0);
         };
         document.addEventListener('mousedown', handleOutside);
         return () => document.removeEventListener('mousedown', handleOutside);

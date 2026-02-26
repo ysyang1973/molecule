@@ -34,8 +34,8 @@ export default function Notification({
             if (item) {
                 toast(<NotificationItem data={item} onClose={onCloseNotification} onClick={onClickItem} />, {
                     id: item.id,
-                    duration: Infinity,
                     unstyled: true,
+                    onAutoClose: () => onCloseNotification(item),
                 });
             }
         });
@@ -51,7 +51,7 @@ export default function Notification({
         window.addEventListener('keydown', onKeyPress);
 
         return () => {
-            window.addEventListener('keydown', onKeyPress);
+            window.removeEventListener('keydown', onKeyPress);
         };
     }, []);
 

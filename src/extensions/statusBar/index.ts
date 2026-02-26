@@ -18,7 +18,7 @@ export const ExtendsStatusBar: IExtension = {
             );
             const target = contextMenu.find((item) => item.id === statusItem?.id);
             if (target) {
-                contextMenu = concatMenu([createMenuDuplicate(target)], contextMenu);
+                contextMenu = concatMenu([createMenuDuplicate(target, molecule.locale.localize)], contextMenu);
             }
             molecule.contextMenu.open(
                 contextMenu,

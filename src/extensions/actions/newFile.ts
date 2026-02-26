@@ -19,7 +19,7 @@ export default class NewFileAction extends BaseAction {
             keybinding: {
                 when: undefined,
                 weight: KeybindingWeight.WorkbenchContrib,
-                primary: KeyMod.CtrlCmd | KeyCode.KeyN,
+                primary: KeyMod.CtrlCmd | KeyMod.Alt | KeyCode.KeyN,
             },
         });
     }

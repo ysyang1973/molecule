@@ -15,7 +15,7 @@ export default defineConfig({
             languageWorkers: ['editorWorkerService'],
         }),
         mockDevServerPlugin({
-            include: 'app/mock/**/*.mock.{ts,js,cjs,mjs,json,json5}',
+            include: 'mock/**/*.mock.{ts,js,cjs,mjs,json,json5}',
         }),
     ],
     optimizeDeps: {

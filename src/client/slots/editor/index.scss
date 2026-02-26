@@ -1,6 +1,7 @@
 @import '../../classNames/style.scss';
 
 $container: prefix('editor');
+$overlay: BEMElement($container, 'dragOverlay');
 
 .#{$container} {
     background: var(--editor-background);
@@ -10,6 +11,24 @@ $container: prefix('editor');
     width: 100%;
 }
 
+.#{$overlay} {
+    align-items: center;
+    background: var(--tab-activeBackground);
+    border: 1px solid var(--tab-activeBorder, var(--focusBorder));
+    box-sizing: border-box;
+    color: var(--tab-activeForeground);
+    cursor: grabbing;
+    display: inline-flex;
+    font-size: 12px;
+    gap: 4px;
+    height: 35px;
+    padding: 0 10px;
+    pointer-events: none;
+    opacity: 0.5;
+    white-space: nowrap;
+}
+
 :export {
     container: $container;
+    overlay: $overlay;
 }

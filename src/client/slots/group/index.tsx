@@ -1,4 +1,5 @@
 import { lazy, Suspense, useRef } from 'react';
+import { useDroppable } from '@dnd-kit/core';
 import { classNames } from 'mo/client/classNames';
 import { ActionBar, Breadcrumb, Header, Progress, ScrollBar, Tab } from 'mo/client/components';
 import type { EditorGroupModel, EditorModel } from 'mo/models/editor';
@@ -27,11 +28,19 @@ export interface IGroupProps {
     onToolbarClick?: GroupMenuHandler;
     onCloseTab?: (tabId: UniqueId, groupId: UniqueId) => void;
     onRenameTab?: (tabId: UniqueId, groupId: UniqueId, name: string) => void;
-    onNewTab?: () => void;
+    onNewTab?: (groupId: UniqueId) => void;
 }
 
 const MonacoEditor = lazy(() => import('../../components/monaco'));
 const MonacoDiffEditor = lazy(() => import('../../components/diffEditor'));
+
+function TabDropEnd({ groupId }: { groupId: UniqueId }) {
+    const { setNodeRef, isOver } = useDroppable({
+        id: `tab-drop-end-${groupId}`,
+        data: { tabId: null, groupId },
+    });
+    return <div ref={setNodeRef} className={classNames(variables.tailZone, isOver && variables.dropTargetEnd)} />;
+}
 
 export default function Group({
     group,
@@ -144,7 +153,7 @@ export default function Group({
                 extra={<ActionBar data={toolbar} onClick={(item) => onToolbarClick?.(item, group.id)} />}
                 onDoubleClick={(e) => {
                     if ((e.target as HTMLElement).closest(`.${variables.tab}`)) return;
-                    onNewTab?.();
+                    onNewTab?.(group.id);
                 }}
             >
                 {group.data.map((tab) => {
@@ -163,6 +172,7 @@ export default function Group({
                         />
                     );
                 })}
+                <TabDropEnd groupId={group.id} />
             </Header>
             <section className={variables.breadcrumb}>
                 <ScrollBar direction={Direction.horizontal} isShowShadow trackStyle={{ height: 3 }}>

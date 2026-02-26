@@ -26,12 +26,12 @@ export interface IEditorController extends BaseController {
     onDragEnter?: (from: TabGroup, to: TabGroup) => void;
     onDragLeave?: (from: TabGroup, to: TabGroup) => void;
     onDragOver?: (from: TabGroup, to: TabGroup) => void;
-    onDrop?: (from: TabGroup, to: TabGroup) => void;
+    onDrop?: (from: TabGroup, to: { tabId: UniqueId | null; groupId: UniqueId }) => void;
     onChange?: (item: TabGroup & { value: string | undefined }, ev: editor.IModelContentChangedEvent) => void;
     onCursorSelection?: (instance: editor.IStandaloneCodeEditor, ev: editor.ICursorSelectionChangedEvent) => void;
     onContextMenu?: EditorContextMenu;
     onToolbarClick?: GroupMenuHandler;
-    onNewTab?: () => void;
+    onNewTab?: (groupId: UniqueId) => void;
 }
 
 @injectable()
@@ -140,7 +140,8 @@ export class EditorController extends BaseController implements IEditorControlle
         this.editor.renameTab(tabId, groupId, name);
     };
 
-    public onNewTab: IEditorController['onNewTab'] = () => {
+    public onNewTab: IEditorController['onNewTab'] = (groupId) => {
+        this.editor.setCurrentGroup(groupId);
         this.action.execute('menuBar.item.createFile');
     };
 
@@ -164,7 +165,7 @@ export class EditorController extends BaseController implements IEditorControlle
         this.emit(EditorEvent.onDragOver, from, to);
     };
 
-    public onDrop: (from: TabGroup, to: TabGroup) => void = (from, to) => {
+    public onDrop: (from: TabGroup, to: { tabId: UniqueId | null; groupId: UniqueId }) => void = (from, to) => {
         this.emit(EditorEvent.onDrop, from, to);
     };
 

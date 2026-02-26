@@ -7,6 +7,11 @@ $item: BEMElement($panel, 'item');
 
 $disabled: BEMModifier($panel, 'disabled');
 $active: BEMModifier($item, 'active');
+$dragging: BEMModifier($item, 'dragging');
+$dropTarget: BEMModifier($item, 'dropTarget');
+$overlay: BEMElement($panel, 'dragOverlay');
+$tailZone: BEMElement($panel, 'tailZone');
+$dropTargetEnd: BEMModifier($tailZone, 'active');
 
 $header-size: 35px;
 
@@ -70,6 +75,23 @@ $header-size: 35px;
                 opacity: 1;
             }
         }
+
+        &.#{$dragging} {
+            opacity: 0.5;
+        }
+
+        &.#{$dropTarget} {
+            &::before {
+                content: '';
+                position: absolute;
+                left: -1px;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background-color: var(--panelTitle-activeBorder, var(--focusBorder));
+                z-index: 1;
+            }
+        }
     }
 
 
@@ -84,6 +106,44 @@ $header-size: 35px;
     }
 }
 
+.#{$tailZone} {
+    flex: 1;
+    min-width: 20px;
+    align-self: stretch;
+    position: relative;
+
+    &.#{$dropTargetEnd} {
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: var(--panelTitle-activeBorder, var(--focusBorder));
+            z-index: 1;
+        }
+    }
+}
+
+.#{$overlay} {
+    align-items: center;
+    background: var(--panel-background);
+    border: 1px solid var(--panelTitle-activeBorder, var(--focusBorder));
+    box-sizing: border-box;
+    color: var(--panelTitle-activeForeground);
+    cursor: grabbing;
+    display: inline-flex;
+    font-size: 11px;
+    gap: 4px;
+    height: 32px;
+    padding: 0 8px;
+    pointer-events: none;
+    opacity: 0.5;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
 :export {
     container: $panel;
     header: $header;
@@ -91,4 +151,9 @@ $header-size: 35px;
     item: $item;
     active: $active;
     disabled: $disabled;
+    dragging: $dragging;
+    dropTarget: $dropTarget;
+    tailZone: $tailZone;
+    dropTargetEnd: $dropTargetEnd;
+    overlay: $overlay;
 }

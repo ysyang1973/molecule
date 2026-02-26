@@ -18,7 +18,7 @@ export default class QuickJumpToLineAction extends BaseAction {
             keybinding: {
                 when: undefined,
                 weight: KeybindingWeight.WorkbenchContrib,
-                primary: KeyChord(KeyMod.WinCtrl | KeyCode.KeyG),
+                primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyG),
             },
         });
     }

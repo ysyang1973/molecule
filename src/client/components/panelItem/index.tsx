@@ -1,3 +1,4 @@
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { classNames } from 'mo/client/classNames';
 import type { IPanelItem } from 'mo/models/panel';
 import type { ContextMenuHandler } from 'mo/types';
@@ -11,12 +12,41 @@ export interface IPanelItemProps {
     onClose?: (id: IPanelItem['id']) => void;
     onClick?: () => void;
     onContextMenu?: ContextMenuHandler<[item: IPanelItem]>;
+    draggingClassName?: string;
+    dropTargetClassName?: string;
 }
 
-export default function PanelItem({ className, data, onClose, onClick, onContextMenu }: IPanelItemProps) {
+export default function PanelItem({ className, data, onClose, onClick, onContextMenu, draggingClassName, dropTargetClassName }: IPanelItemProps) {
+    const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+        id: `panel-drag-${data.id}`,
+        data: { panelId: data.id },
+    });
+
+    const { setNodeRef: setDropRef, isOver } = useDroppable({
+        id: `panel-drop-${data.id}`,
+        data: { panelId: data.id },
+    });
+
+    const setRef = (node: HTMLDivElement | null) => {
+        setDragRef(node);
+        setDropRef(node);
+    };
+
     return (
-        <Prevent onContextMenu={(e) => !data.disabled && onContextMenu?.({ x: e.pageX, y: e.pageY }, data)}>
-            <div className={classNames(className)} onClick={() => !data.disabled && onClick?.()}>
+        <Prevent
+            ref={setRef}
+            onContextMenu={(e) => !data.disabled && onContextMenu?.({ x: e.pageX, y: e.pageY }, data)}
+            {...attributes}
+            {...listeners}
+        >
+            <div
+                className={classNames(
+                    className,
+                    isDragging && draggingClassName,
+                    isOver && !isDragging && dropTargetClassName
+                )}
+                onClick={() => !data.disabled && onClick?.()}
+            >
                 <Icon type={data.icon} />
                 {data.name}
                 {!!data.closable && (

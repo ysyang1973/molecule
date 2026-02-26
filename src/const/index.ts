@@ -8,3 +8,4 @@ export const SETTINGS_STORE_KEY = `${APP_PREFIX}.settings`;
 export const EDITOR_WORKSPACE_STORE_KEY = `${APP_PREFIX}.editorWorkspace`;
 export const AUXILIARY_BAR_STORE_KEY = `${APP_PREFIX}.auxiliaryBar`;
 export const PANEL_STORE_KEY = `${APP_PREFIX}.panel`;
+export const LAYOUT_STORE_KEY = `${APP_PREFIX}.layout`;

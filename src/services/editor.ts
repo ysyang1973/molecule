@@ -246,27 +246,41 @@ export class EditorService extends BaseService<EditorModel> {
         }
     }
 
-    public moveTab(from: TabGroup, to: TabGroup): void {
+    public moveTab(from: TabGroup, to: { tabId: UniqueId | null; groupId: UniqueId }): void {
         this.dispatch((draft) => {
             const source = draft.groups.find(searchById(from.groupId));
             const target = draft.groups.find(searchById(to.groupId));
             if (!source || !target) return;
             const sourceTabIndex = source.data.findIndex(searchById(from.tabId));
-            const targetTabIndex = target.data.findIndex(searchById(to.tabId));
-            if (sourceTabIndex === -1 || targetTabIndex === -1) return;
+            if (sourceTabIndex === -1) return;
             // Move active tab to another group should active next tab
             if (from.groupId !== to.groupId && source.activeTab === from.tabId) {
                 source.activeTab = getPrevOrNext(source.data, sourceTabIndex)?.id;
             }
             // Remove source tab
             const tab = source.data.splice(sourceTabIndex, 1);
-            // Insert source tab into target while there is no same tab in target
-            const existInTarget = target.data.findIndex(searchById(from.tabId));
-            if (existInTarget === -1) {
-                target.data.splice(targetTabIndex, 0, tab[0]);
+            if (to.tabId != null) {
+                const targetTabIndex = target.data.findIndex(searchById(to.tabId));
+                if (targetTabIndex === -1) {
+                    target.data.push(tab[0]);
+                } else {
+                    // Insert source tab into target while there is no same tab in target
+                    const existInTarget = target.data.findIndex(searchById(from.tabId));
+                    if (existInTarget === -1) {
+                        target.data.splice(targetTabIndex, 0, tab[0]);
+                    } else {
+                        // Adjust the order
+                        target.data.splice(targetTabIndex, 0, target.data.splice(existInTarget, 1)[0]);
+                    }
+                }
             } else {
-                // Adjust the order
-                target.data.splice(targetTabIndex, 0, target.data.splice(existInTarget, 1)[0]);
+                // Append to end of target group
+                const existInTarget = target.data.findIndex(searchById(from.tabId));
+                if (existInTarget === -1) {
+                    target.data.push(tab[0]);
+                } else {
+                    target.data.push(target.data.splice(existInTarget, 1)[0]);
+                }
             }
             // active current tab
             target.activeTab = from.tabId;
@@ -432,7 +446,7 @@ export class EditorService extends BaseService<EditorModel> {
         this.subscribe(EditorEvent.onDragOver, callback);
     }
 
-    public onDrop(callback: (from: TabGroup, to: TabGroup) => void) {
+    public onDrop(callback: (from: TabGroup, to: { tabId: UniqueId | null; groupId: UniqueId }) => void) {
         this.subscribe(EditorEvent.onDrop, callback);
     }
 

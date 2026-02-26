@@ -1,11 +1,12 @@
-import { useMemo } from 'react';
-import { DndContext, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragOverEvent, type DragEndEvent } from '@dnd-kit/core';
+import { useMemo, useState } from 'react';
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragOverEvent, type DragEndEvent } from '@dnd-kit/core';
 import { Progress, Split, Welcome } from 'mo/client/components';
 import { useConnector, useEditorPos, useSettings } from 'mo/client/hooks';
 import type { IEditorController } from 'mo/controllers/editor';
-import type { TabGroup } from 'mo/types';
+import type { IEditorTab, TabGroup } from 'mo/types';
 
 import Group from '../group';
+import TabOverlay from './tabOverlay';
 import variables from './index.scss';
 
 export type IEditorProps = IEditorController;
@@ -48,10 +49,14 @@ export default function Editor({
     useRectResize((data) => onPaneSizeChange?.(data));
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+    const [activeTab, setActiveTab] = useState<IEditorTab<any> | null>(null);
 
     const handleDragStart = (event: DragStartEvent) => {
         const data = event.active.data.current as TabGroup;
         onDragStart?.(data.tabId, data.groupId);
+        const group = groups.find((g) => g.id === data.groupId);
+        const tab = group?.data.find((t) => t.id === data.tabId);
+        setActiveTab(tab ?? null);
     };
 
     const handleDragOver = (event: DragOverEvent) => {
@@ -66,10 +71,11 @@ export default function Editor({
         const from = event.active.data.current as TabGroup;
         onDragEnd?.(from.tabId, from.groupId);
         if (event.over) {
-            const to = event.over.data.current as TabGroup;
+            const to = event.over.data.current as { tabId: TabGroup['tabId'] | null; groupId: TabGroup['groupId'] };
             onDrop?.(from, to);
         }
         onDragLeave?.(from, { tabId: from.tabId, groupId: from.groupId });
+        setActiveTab(null);
     };
 
     const renderGroups = () => {
@@ -97,6 +103,9 @@ export default function Editor({
                         </Split.Pane>
                     ))}
                 </Split>
+                <DragOverlay dropAnimation={null}>
+                    {activeTab ? <TabOverlay data={activeTab} /> : null}
+                </DragOverlay>
             </DndContext>
         );
     };

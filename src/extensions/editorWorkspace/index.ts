@@ -1,10 +1,10 @@
 import React from 'react';
 import { debounce } from 'lodash-es';
-import { AUXILIARY_BAR_STORE_KEY, EDITOR_WORKSPACE_STORE_KEY, PANEL_STORE_KEY } from 'mo/const';
+import { AUXILIARY_BAR_STORE_KEY, EDITOR_WORKSPACE_STORE_KEY, LAYOUT_STORE_KEY, PANEL_STORE_KEY } from 'mo/const';
 import { AuxiliaryModel, type IAuxiliaryData } from 'mo/models/auxiliaryBar';
 import { EditorGroupModel } from 'mo/models/editor';
 import { PanelModel, type IPanelItem } from 'mo/models/panel';
-import type { IEditorTab, IExtension, UniqueId } from 'mo/types';
+import type { IEditorTab, IExtension, PosType, UniqueId } from 'mo/types';
 import { randomId } from 'mo/utils';
 import { getValue, setValue } from 'mo/utils/storage';
 
@@ -128,6 +128,14 @@ function serializePanel(item: IPanelItem<any>): ISerializablePanel {
     return serialized;
 }
 
+// ===================== Layout Types =====================
+
+interface ISerializableLayout {
+    splitPanePos: PosType[];
+    horizontalSplitPanePos: PosType[];
+    sidebarHidden: boolean;
+}
+
 export const ExtendsEditorWorkspace: IExtension = {
     id: 'ExtendsEditorWorkspace',
     name: 'Extend Editor Workspace Persistence',
@@ -199,11 +207,30 @@ export const ExtendsEditorWorkspace: IExtension = {
         molecule.panel.onClose(() => savePanel());
         molecule.panel.onUpdateState(() => savePanel());
 
+        // ===================== LAYOUT SAVE =====================
+        const saveLayout = debounce(() => {
+            if (isRestoring) return;
+            try {
+                const layoutState = molecule.layout.getState();
+                const layout: ISerializableLayout = {
+                    splitPanePos: layoutState.splitPanePos,
+                    horizontalSplitPanePos: layoutState.horizontalSplitPanePos,
+                    sidebarHidden: layoutState.sidebar.hidden,
+                };
+                setValue(LAYOUT_STORE_KEY, JSON.stringify(layout));
+            } catch (e) {
+                console.warn('[EditorWorkspace] Failed to save layout:', e);
+            }
+        }, 1000);
+
+        molecule.layout.onUpdateState(() => saveLayout());
+
         // ===================== FLUSH ON UNLOAD =====================
         window.addEventListener('beforeunload', () => {
             saveWorkspace.flush();
             saveAuxiliaryBar.flush();
             savePanel.flush();
+            saveLayout.flush();
         });
 
         // ===================== EDITOR RESTORE =====================
@@ -261,6 +288,26 @@ export const ExtendsEditorWorkspace: IExtension = {
                 setValue(EDITOR_WORKSPACE_STORE_KEY, '');
             } finally {
                 isRestoring = false;
+            }
+        }
+
+        // ===================== LAYOUT RESTORE =====================
+        const storedLayout = getValue(LAYOUT_STORE_KEY);
+        if (storedLayout) {
+            try {
+                const layout: ISerializableLayout = JSON.parse(storedLayout);
+                if (Array.isArray(layout.splitPanePos)) {
+                    molecule.layout.setPaneSize(layout.splitPanePos);
+                }
+                if (Array.isArray(layout.horizontalSplitPanePos)) {
+                    molecule.layout.setHorizontalPaneSize(layout.horizontalSplitPanePos);
+                }
+                if (layout.sidebarHidden) {
+                    molecule.layout.setSidebar(false);
+                }
+            } catch (e) {
+                console.warn('[EditorWorkspace] Failed to restore layout:', e);
+                setValue(LAYOUT_STORE_KEY, '');
             }
         }
 

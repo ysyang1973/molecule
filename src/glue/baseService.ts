@@ -46,8 +46,9 @@ export default abstract class BaseService<S = any> extends GlobalEvent implement
         const next = produce(base, recipe);
 
         if (next !== base) {
-            this.render(next);
+            const prev = this.state;
             this.state = next;
+            this.emit(this.name, prev, next);
             didRender?.();
         }
     }
@@ -55,7 +56,6 @@ export default abstract class BaseService<S = any> extends GlobalEvent implement
     /**
      * Set the state values, and notify the view component to re render
      * @param values update target state values
-     * @FIXME Should support batchUpdate based on fiber
      */
     public setState(
         values: Partial<S> | ((prev: S) => Partial<S>),
@@ -73,25 +73,20 @@ export default abstract class BaseService<S = any> extends GlobalEvent implement
                 return value;
             }
         });
-        this.render(nextState);
         const prev = this.state;
         this.state = nextState;
+        this.emit(this.name, prev, nextState);
         callback?.(prev, this.state);
     }
 
-    private _renderRecord: { prev?: S; next?: S } = {};
     /**
      * Initiative notify the component to render the view by the state
      * @param nextState
      */
     public render(nextState: S) {
-        this._renderRecord.prev ??= this.state;
-        this._renderRecord.next = nextState;
-
-        window.queueMicrotask(() => {
-            this.emit(this.name, this._renderRecord.prev, this._renderRecord.next);
-            this._renderRecord = {};
-        });
+        const prev = this.state;
+        this.state = nextState;
+        this.emit(this.name, prev, nextState);
     }
 
     public onUpdateState(listener: (prevState: S, nextState: S) => void) {

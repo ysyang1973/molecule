@@ -11,6 +11,7 @@ export interface IPanelController extends BaseController {
     onToolbarClick?(item: IMenuItemProps): void;
     onClose?(key: UniqueId): void;
     onContextMenu?: ContextMenuHandler<[item?: IPanelItem]>;
+    onDrop?(from: UniqueId, to: UniqueId | null): void;
 }
 
 @injectable()
@@ -46,5 +47,9 @@ export class PanelController extends BaseController implements IPanelController 
         item
     ) => {
         this.emit(PanelEvent.onContextMenu, pos, item);
+    };
+
+    public readonly onDrop = (from: UniqueId, to: UniqueId | null): void => {
+        this.emit(PanelEvent.onDrop, from, to);
     };
 }

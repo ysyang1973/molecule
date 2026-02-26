@@ -1,6 +1,8 @@
 import { FileTypes, IContributeType, IExtension, IMoleculeContext } from '@dtinsight/molecule';
 import { debounce } from 'lodash-es';
+import { languages } from 'monaco-editor/esm/vs/editor/editor.api';
 
+import { showInfoDialog } from '../utils/showInfoDialog';
 import TestPane from '../components/testPane';
 import { getFileContent, getFiles, getWorkspace, searchFileContents } from '../utils';
 import grammars from './grammars';
@@ -15,6 +17,31 @@ export const TestExtension: IExtension = {
         [IContributeType.Grammar]: grammars,
     },
     activate(molecule: IMoleculeContext, monaco) {
+        // Register SQL language and configuration for comment toggling support
+        languages.register({ id: 'sql', aliases: ['SQL', 'sql'], extensions: ['.sql'] });
+        languages.setLanguageConfiguration('sql', {
+            comments: {
+                lineComment: '--',
+                blockComment: ['/*', '*/'],
+            },
+            brackets: [
+                ['(', ')'],
+                ['[', ']'],
+            ],
+            autoClosingPairs: [
+                { open: '(', close: ')' },
+                { open: '[', close: ']' },
+                { open: "'", close: "'" },
+                { open: '"', close: '"' },
+            ],
+            surroundingPairs: [
+                { open: '(', close: ')' },
+                { open: '[', close: ']' },
+                { open: "'", close: "'" },
+                { open: '"', close: '"' },
+            ],
+        });
+
         molecule.activityBar.add({
             id: 'testPane',
             name: 'testPane',
@@ -29,15 +56,6 @@ export const TestExtension: IExtension = {
         });
 
         molecule.activityBar.onContextMenu(() => {
-            molecule.contextMenu.add([
-                { id: 'testPane__activityBar__molecule', name: 'Molecule' },
-                {
-                    id: 'testPane__activityBar__molecule--disabled',
-                    name: 'disabled',
-                    disabled: true,
-                },
-                { id: '2', type: 'divider' },
-            ]);
         });
 
         molecule.contextMenu.onClick((item) => {
@@ -196,16 +214,54 @@ export const TestExtension: IExtension = {
         });
 
         molecule.menuBar.onSelect((menuId) => {
-            if (menuId === molecule.builtin.getConstants().MENUBAR_ITEM_ABOUT) {
+            const constants = molecule.builtin.getConstants();
+            if (menuId === constants.MENUBAR_ITEM_ABOUT) {
                 window.open('https://github.com/DTStack/molecule', '_blank');
+            } else if (menuId === constants.MENUBAR_ITEM_RUN_TASK) {
+                showInfoDialog({ message: '이 기능은 지원하지 않습니다.' });
+            } else if (menuId === constants.MENUBAR_ITEM_OPEN) {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.multiple = true;
+                input.onchange = () => {
+                    const files = input.files;
+                    if (!files) return;
+                    Array.from(files).forEach((file) => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const content = reader.result as string;
+                            const tabData = {
+                                id: `local_${file.name}_${Date.now()}`,
+                                name: file.name,
+                                icon: 'file' as const,
+                                value: content,
+                                language: (() => {
+                                    const name = file.name;
+                                    if (name.endsWith('.md')) return 'markdown';
+                                    if (name.endsWith('.yml') || name.endsWith('.yaml')) return 'yml';
+                                    if (name.endsWith('.js')) return 'javascript';
+                                    if (name.endsWith('.ts')) return 'typescript';
+                                    if (name.endsWith('.tsx')) return 'typescriptreact';
+                                    if (name.endsWith('.jsx')) return 'javascriptreact';
+                                    if (name.endsWith('.json')) return 'json';
+                                    if (name.endsWith('.css') || name.endsWith('.scss')) return 'css';
+                                    if (name.endsWith('.html')) return 'html';
+                                    if (name.endsWith('.sql')) return 'sql';
+                                    return 'plain';
+                                })(),
+                                breadcrumb: [{ id: file.name, name: file.name }],
+                            };
+                            molecule.editor.open(tabData, molecule.editor.getState().groups?.at(0)?.id);
+                        };
+                        reader.readAsText(file);
+                    });
+                };
+                input.click();
             }
         });
 
         molecule.menuBar.subscribe('APP_DEBUG_ICON', () => {
-            const quickPick = monaco.QuickInputService.createQuickPick();
-            quickPick.busy = true;
-            quickPick.items = [];
-            quickPick.show();
+            molecule.action.execute('workbench.action.quickOpenFile');
         });
 
         molecule.editor.onClose((tabs) => {

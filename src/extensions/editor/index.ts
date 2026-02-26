@@ -1,6 +1,7 @@
 import { EditorEvent } from 'mo/models/editor';
 import type { editor } from 'mo/monaco';
-import type { IExtension } from 'mo/types';
+import type { IEditorTab, IExtension, UniqueId } from 'mo/types';
+import { type ConfirmDialogResult, showConfirmDialog } from 'mo/utils/confirmDialog';
 
 export const ExtendsEditor: IExtension = {
     id: 'ExtendsEditor',
@@ -9,19 +10,100 @@ export const ExtendsEditor: IExtension = {
         molecule.editor.onFocus(updateCursorPosition);
         molecule.editor.onCursorSelection(updateCursorPosition);
 
-        molecule.editor.onCloseAll((groupId) => {
+        function getDialogLabels() {
+            return {
+                saveLabel: molecule.locale.localize('editor.closeConfirm.save', 'Save'),
+                dontSaveLabel: molecule.locale.localize('editor.closeConfirm.dontSave', "Don't Save"),
+                cancelLabel: molecule.locale.localize('editor.closeConfirm.cancel', 'Cancel'),
+            };
+        }
+
+        async function confirmCloseTab(tab: IEditorTab<any> | undefined): Promise<ConfirmDialogResult> {
+            if (!tab?.modified) return 'dontsave';
+            const name = typeof tab.name === 'string' ? tab.name : String(tab.name ?? '');
+            return showConfirmDialog({
+                message: molecule.locale.localize(
+                    'editor.closeConfirm.single',
+                    `'${name}' has unsaved changes. Do you want to save the changes?`,
+                    name
+                ),
+                ...getDialogLabels(),
+            });
+        }
+
+        async function confirmCloseTabs(tabs: IEditorTab<any>[]): Promise<ConfirmDialogResult> {
+            const modifiedTabs = tabs.filter((t) => t.modified);
+            if (modifiedTabs.length === 0) return 'dontsave';
+            if (modifiedTabs.length === 1) {
+                return confirmCloseTab(modifiedTabs[0]);
+            }
+            return showConfirmDialog({
+                message: molecule.locale.localize(
+                    'editor.closeConfirm.multiple',
+                    'There are unsaved changes in some tabs. Do you want to save the changes?'
+                ),
+                ...getDialogLabels(),
+            });
+        }
+
+        function saveModifiedTabs(tabs: IEditorTab<any>[], groupId: UniqueId) {
+            const modifiedIds = tabs.filter((t) => t.modified).map((t) => t.id);
+            if (modifiedIds.length > 0) {
+                molecule.editor.saveTabs(modifiedIds, groupId);
+            }
+        }
+
+        molecule.editor.onCloseAll(async (groupId) => {
+            let tabs: IEditorTab<any>[];
+            if (groupId !== undefined) {
+                const group = molecule.editor.getGroup(groupId);
+                tabs = group?.data ?? [];
+            } else {
+                tabs = molecule.editor.getGroups().flatMap((g) => g.data);
+            }
+            const result = await confirmCloseTabs(tabs);
+            if (result === 'cancel') return;
+            if (result === 'save') {
+                if (groupId !== undefined) {
+                    saveModifiedTabs(tabs, groupId);
+                } else {
+                    molecule.editor.getGroups().forEach((g) => saveModifiedTabs(g.data, g.id));
+                }
+            }
             molecule.editor.closeAll(groupId);
         });
-        molecule.editor.onCloseOther((tabId, groupId) => {
+        molecule.editor.onCloseOther(async (tabId, groupId) => {
+            const tabs = molecule.editor.getTabs(groupId).filter((t) => t.id !== tabId);
+            const result = await confirmCloseTabs(tabs);
+            if (result === 'cancel') return;
+            if (result === 'save') saveModifiedTabs(tabs, groupId);
             molecule.editor.closeOther(tabId, groupId);
         });
-        molecule.editor.onCloseTab((tabId, groupId) => {
+        molecule.editor.onCloseTab(async (tabId, groupId) => {
+            const tab = molecule.editor.getTab(tabId, groupId);
+            const result = await confirmCloseTab(tab);
+            if (result === 'cancel') return;
+            if (result === 'save' && tab) {
+                molecule.editor.saveTabs([tab.id], groupId);
+            }
             molecule.editor.closeTab(tabId, groupId);
         });
-        molecule.editor.onCloseToLeft((tabId, groupId) => {
+        molecule.editor.onCloseToLeft(async (tabId, groupId) => {
+            const tabs = molecule.editor.getTabs(groupId);
+            const idx = tabs.findIndex((t) => t.id === tabId);
+            const left = tabs.slice(0, idx);
+            const result = await confirmCloseTabs(left);
+            if (result === 'cancel') return;
+            if (result === 'save') saveModifiedTabs(left, groupId);
             molecule.editor.closeToLeft(tabId, groupId);
         });
-        molecule.editor.onCloseToRight((tabId, groupId) => {
+        molecule.editor.onCloseToRight(async (tabId, groupId) => {
+            const tabs = molecule.editor.getTabs(groupId);
+            const idx = tabs.findIndex((t) => t.id === tabId);
+            const right = tabs.slice(idx + 1);
+            const result = await confirmCloseTabs(right);
+            if (result === 'cancel') return;
+            if (result === 'save') saveModifiedTabs(right, groupId);
             molecule.editor.closeToRight(tabId, groupId);
         });
 

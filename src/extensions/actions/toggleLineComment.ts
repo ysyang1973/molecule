@@ -23,6 +23,7 @@ export default class ToggleLineCommentAction extends BaseAction {
     }
     run() {
         // Proxy action to monaco-editor
+        this.molecule.editor.getCurrentGroup()?.editorInstance?.focus();
         this.molecule.editor.getCurrentGroup()?.editorInstance?.trigger('source', 'editor.action.commentLine', null);
     }
 }
