@@ -2,6 +2,9 @@
 
 $container: prefix('editor');
 $overlay: BEMElement($container, 'dragOverlay');
+$groupSash: BEMElement($container, 'groupSash');
+$groupSashVertical: BEMModifier($groupSash, 'vertical');
+$groupSashHorizontal: BEMModifier($groupSash, 'horizontal');
 
 .#{$container} {
     background: var(--editor-background);
@@ -28,7 +31,37 @@ $overlay: BEMElement($container, 'dragOverlay');
     white-space: nowrap;
 }
 
+.#{$groupSashVertical} {
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 1px;
+        margin-left: -0.5px;
+        background-color: var(--editorGroup-border);
+        pointer-events: none;
+    }
+}
+
+.#{$groupSashHorizontal} {
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 1px;
+        margin-top: -0.5px;
+        background-color: var(--editorGroup-border);
+        pointer-events: none;
+    }
+}
+
 :export {
     container: $container;
     overlay: $overlay;
+    groupSashVertical: $groupSashVertical;
+    groupSashHorizontal: $groupSashHorizontal;
 }

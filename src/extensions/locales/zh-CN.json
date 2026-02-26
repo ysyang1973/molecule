@@ -99,6 +99,8 @@
         "notification.toolbar.hide": "隐藏通知",
         "panel.contextMenu.hide": "隐藏面板",
         "panel.item.output": "输出",
+        "panel.item.problems": "问题",
+        "panel.problems.noProblems": "未检测到任何问题。",
         "panel.toolbar.close": "关闭面板",
         "panel.toolbar.maximize": "最大化面板",
         "panel.toolbar.restore": "恢复面板大小",

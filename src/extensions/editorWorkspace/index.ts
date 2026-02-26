@@ -133,7 +133,13 @@ function serializePanel(item: IPanelItem<any>): ISerializablePanel {
 interface ISerializableLayout {
     splitPanePos: PosType[];
     horizontalSplitPanePos: PosType[];
+    groupSplitPos: number[];
     sidebarHidden: boolean;
+    panelHidden: boolean;
+    panelMaximized: boolean;
+    activityBarHidden: boolean;
+    statusBarHidden: boolean;
+    menuBarHidden: boolean;
 }
 
 export const ExtendsEditorWorkspace: IExtension = {
@@ -215,7 +221,13 @@ export const ExtendsEditorWorkspace: IExtension = {
                 const layout: ISerializableLayout = {
                     splitPanePos: layoutState.splitPanePos,
                     horizontalSplitPanePos: layoutState.horizontalSplitPanePos,
-                    sidebarHidden: layoutState.sidebar.hidden,
+                    groupSplitPos: layoutState.groupSplitPos,
+                    sidebarHidden: !!layoutState.sidebar.hidden,
+                    panelHidden: !!layoutState.panel.hidden,
+                    panelMaximized: layoutState.panel.panelMaximized,
+                    activityBarHidden: !!layoutState.activityBar.hidden,
+                    statusBarHidden: !!layoutState.statusBar.hidden,
+                    menuBarHidden: !!layoutState.menuBar.hidden,
                 };
                 setValue(LAYOUT_STORE_KEY, JSON.stringify(layout));
             } catch (e) {
@@ -302,8 +314,26 @@ export const ExtendsEditorWorkspace: IExtension = {
                 if (Array.isArray(layout.horizontalSplitPanePos)) {
                     molecule.layout.setHorizontalPaneSize(layout.horizontalSplitPanePos);
                 }
+                if (Array.isArray(layout.groupSplitPos) && layout.groupSplitPos.length > 0) {
+                    molecule.layout.setGroupSplitSize(layout.groupSplitPos);
+                }
                 if (layout.sidebarHidden) {
                     molecule.layout.setSidebar(false);
+                }
+                if (layout.panelHidden) {
+                    molecule.layout.setPanel(false);
+                }
+                if (layout.panelMaximized) {
+                    molecule.layout.setPanelMaximized(true);
+                }
+                if (layout.activityBarHidden) {
+                    molecule.layout.setActivityBar(false);
+                }
+                if (layout.statusBarHidden) {
+                    molecule.layout.setStatusBar(false);
+                }
+                if (layout.menuBarHidden) {
+                    molecule.layout.setMenuBar(false);
                 }
             } catch (e) {
                 console.warn('[EditorWorkspace] Failed to restore layout:', e);
@@ -404,6 +434,12 @@ export const ExtendsEditorWorkspace: IExtension = {
                                     merged.push(existing);
                                 }
                             }
+
+                            // Update sortIndex to match restored order so
+                            // the UI sort(sortByIndex) reflects the saved order
+                            merged.forEach((item, i) => {
+                                item.sortIndex = i;
+                            });
 
                             draft.data.length = 0;
                             draft.data.push(...merged);

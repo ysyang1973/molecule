@@ -37,3 +37,4 @@ website/yarn-error.log*
 **/style__variables.js
 src/**/client/**/index.css
 src/client/classNames/style.css
+app/dist

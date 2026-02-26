@@ -3,6 +3,9 @@ import type { editor } from 'mo/monaco';
 import type { IEditorTab, IExtension, UniqueId } from 'mo/types';
 import { type ConfirmDialogResult, showConfirmDialog } from 'mo/utils/confirmDialog';
 
+const lockedGroups = new Set<UniqueId>();
+let savedGroupSplitPos: number[] | null = null;
+
 export const ExtendsEditor: IExtension = {
     id: 'ExtendsEditor',
     name: 'Extend The Default Editor',
@@ -54,6 +57,7 @@ export const ExtendsEditor: IExtension = {
         }
 
         molecule.editor.onCloseAll(async (groupId) => {
+            if (groupId !== undefined && lockedGroups.has(groupId)) return;
             let tabs: IEditorTab<any>[];
             if (groupId !== undefined) {
                 const group = molecule.editor.getGroup(groupId);
@@ -73,6 +77,7 @@ export const ExtendsEditor: IExtension = {
             molecule.editor.closeAll(groupId);
         });
         molecule.editor.onCloseOther(async (tabId, groupId) => {
+            if (lockedGroups.has(groupId)) return;
             const tabs = molecule.editor.getTabs(groupId).filter((t) => t.id !== tabId);
             const result = await confirmCloseTabs(tabs);
             if (result === 'cancel') return;
@@ -80,6 +85,7 @@ export const ExtendsEditor: IExtension = {
             molecule.editor.closeOther(tabId, groupId);
         });
         molecule.editor.onCloseTab(async (tabId, groupId) => {
+            if (lockedGroups.has(groupId)) return;
             const tab = molecule.editor.getTab(tabId, groupId);
             const result = await confirmCloseTab(tab);
             if (result === 'cancel') return;
@@ -153,17 +159,89 @@ export const ExtendsEditor: IExtension = {
         });
 
         molecule.editor.onToolbarClick((item, groupId) => {
-            const { EDITOR_TOOLBAR_SPLIT: EDITOR_MENU_SPLIT, EDITOR_CONTEXTMENU_CLOSE_ALL: EDITOR_MENU_CLOSE_ALL } =
-                molecule.builtin.getState().constants;
+            const {
+                EDITOR_TOOLBAR_SPLIT,
+                EDITOR_CONTEXTMENU_CLOSE_ALL,
+                EDITOR_TOOLBAR_SHOW_OPEN_EDITORS,
+                EDITOR_TOOLBAR_CLOSE_SAVED,
+                EDITOR_TOOLBAR_MAXIMIZE_GROUP,
+                EDITOR_TOOLBAR_LOCK_GROUP,
+                EDITOR_TOOLBAR_EDITOR_LAYOUT,
+                SIDEBAR_ITEM_EXPLORER,
+            } = molecule.builtin.getState().constants;
             switch (item.id) {
-                case EDITOR_MENU_SPLIT: {
+                case EDITOR_TOOLBAR_SPLIT: {
                     const group = molecule.editor.getGroup(groupId);
                     if (!group || !group.activeTab) return;
                     molecule.editor.emit(EditorEvent.onSplitEditorRight, group.activeTab, group.id);
                     break;
                 }
-                case EDITOR_MENU_CLOSE_ALL: {
+                case EDITOR_CONTEXTMENU_CLOSE_ALL: {
                     molecule.editor.emit(EditorEvent.onCloseAll, groupId);
+                    break;
+                }
+                case EDITOR_TOOLBAR_SHOW_OPEN_EDITORS: {
+                    // Show the sidebar explorer with open editors panel visible
+                    molecule.sidebar.setCurrent(SIDEBAR_ITEM_EXPLORER);
+                    molecule.layout.setSidebar(true);
+                    // Ensure open editors panel is visible
+                    const { EXPLORER_ITEM_OPEN_EDITOR } = molecule.builtin.getState().constants;
+                    const openEditorPanel = molecule.explorer.get(EXPLORER_ITEM_OPEN_EDITOR);
+                    if (openEditorPanel?.hidden) {
+                        molecule.explorer.update({
+                            id: EXPLORER_ITEM_OPEN_EDITOR,
+                            hidden: false,
+                        });
+                    }
+                    break;
+                }
+                case EDITOR_TOOLBAR_CLOSE_SAVED: {
+                    molecule.editor.closeSaved(groupId);
+                    break;
+                }
+                case EDITOR_TOOLBAR_MAXIMIZE_GROUP: {
+                    // Toggle maximize: if there are multiple groups, hide all others by
+                    // setting the split sizes so only this group is visible
+                    const groups = molecule.editor.getGroups();
+                    if (groups.length <= 1) return;
+                    const idx = groups.findIndex((g) => g.id === groupId);
+                    if (idx === -1) return;
+                    const currentSizes = molecule.layout.getState().groupSplitPos;
+                    const isMaximized =
+                        currentSizes.length === groups.length &&
+                        currentSizes[idx] !== undefined &&
+                        currentSizes.filter((s, i) => i !== idx && s === 0).length === groups.length - 1;
+                    if (isMaximized) {
+                        // Restore to saved sizes, or distribute evenly
+                        if (savedGroupSplitPos && savedGroupSplitPos.length === groups.length) {
+                            molecule.layout.setGroupSplitSize(savedGroupSplitPos);
+                        } else {
+                            const evenSize = 1 / groups.length;
+                            molecule.layout.setGroupSplitSize(groups.map(() => evenSize));
+                        }
+                        savedGroupSplitPos = null;
+                    } else {
+                        // Save current sizes before maximizing
+                        if (currentSizes.length === groups.length) {
+                            savedGroupSplitPos = [...currentSizes];
+                        }
+                        // Maximize: give all space to the focused group
+                        const sizes = groups.map((_, i) => (i === idx ? 1 : 0));
+                        molecule.layout.setGroupSplitSize(sizes);
+                    }
+                    break;
+                }
+                case EDITOR_TOOLBAR_LOCK_GROUP: {
+                    // Toggle lock state for the group
+                    if (lockedGroups.has(groupId)) {
+                        lockedGroups.delete(groupId);
+                    } else {
+                        lockedGroups.add(groupId);
+                    }
+                    break;
+                }
+                case EDITOR_TOOLBAR_EDITOR_LAYOUT: {
+                    molecule.settings.access();
                     break;
                 }
                 default:

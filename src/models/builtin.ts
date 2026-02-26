@@ -43,6 +43,11 @@ export class BuiltinModel {
         EDITOR_CONTEXTMENU_CLOSE_SAVED: 'editor.contextMenu.closeSaved',
         EDITOR_CONTEXTMENU_CLOSE: 'editor.contextMenu.close',
         EDITOR_TOOLBAR_SPLIT: 'editor.toolbar.split',
+        EDITOR_TOOLBAR_SHOW_OPEN_EDITORS: 'editor.toolbar.showOpenEditors',
+        EDITOR_TOOLBAR_CLOSE_SAVED: 'editor.toolbar.closeSaved',
+        EDITOR_TOOLBAR_MAXIMIZE_GROUP: 'editor.toolbar.maximizeGroup',
+        EDITOR_TOOLBAR_LOCK_GROUP: 'editor.toolbar.lockGroup',
+        EDITOR_TOOLBAR_EDITOR_LAYOUT: 'editor.toolbar.editorLayout',
         EDITOR_ITEM_SETTING: 'editor.item.setting',
         NOTIFICATION_TOOLBAR_CLEAR_ALL: 'notification.toolbar.clearAll',
         NOTIFICATION_TOOLBAR_CLEAR: 'notification.toolbar.clear',
@@ -429,8 +434,50 @@ export class BuiltinModel {
                     sortIndex: 99,
                 },
                 {
+                    id: this.constants.EDITOR_TOOLBAR_SHOW_OPEN_EDITORS,
+                    name: this.localize(
+                        this.constants.EDITOR_TOOLBAR_SHOW_OPEN_EDITORS,
+                        'Show Open Editors'
+                    ),
+                },
+                {
                     id: this.constants.EDITOR_CONTEXTMENU_CLOSE_ALL,
                     name: this.localize(this.constants.EDITOR_CONTEXTMENU_CLOSE_ALL, 'Close All'),
+                    keybinding: 'Ctrl+K W',
+                },
+                {
+                    id: this.constants.EDITOR_TOOLBAR_CLOSE_SAVED,
+                    name: this.localize(this.constants.EDITOR_TOOLBAR_CLOSE_SAVED, 'Close Saved'),
+                    keybinding: 'Ctrl+K U',
+                },
+                {
+                    type: 'divider',
+                    id: 'editor.toolbar.divider1',
+                    name: '',
+                },
+                {
+                    id: this.constants.EDITOR_TOOLBAR_MAXIMIZE_GROUP,
+                    name: this.localize(
+                        this.constants.EDITOR_TOOLBAR_MAXIMIZE_GROUP,
+                        'Maximize Group'
+                    ),
+                    keybinding: 'Ctrl+K M',
+                },
+                {
+                    id: this.constants.EDITOR_TOOLBAR_LOCK_GROUP,
+                    name: this.localize(this.constants.EDITOR_TOOLBAR_LOCK_GROUP, 'Lock Group'),
+                },
+                {
+                    type: 'divider',
+                    id: 'editor.toolbar.divider2',
+                    name: '',
+                },
+                {
+                    id: this.constants.EDITOR_TOOLBAR_EDITOR_LAYOUT,
+                    name: this.localize(
+                        this.constants.EDITOR_TOOLBAR_EDITOR_LAYOUT,
+                        'Editor Layout'
+                    ),
                 },
             ],
         EDITOR_TREE: () =>

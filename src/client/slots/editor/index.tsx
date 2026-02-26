@@ -81,7 +81,7 @@ export default function Editor({
     const renderGroups = () => {
         return (
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-                <Split ref={ref} sizes={sizes} split={layout.editorDirection} onChange={onPaneSizeChange}>
+                <Split ref={ref} sizes={sizes} split={layout.editorDirection} onChange={onPaneSizeChange} sashClassName={layout.editorDirection === 'vertical' ? variables.groupSashVertical : variables.groupSashHorizontal}>
                     {groups.map((g) => (
                         <Split.Pane key={g.id} minSize={220}>
                             <Group

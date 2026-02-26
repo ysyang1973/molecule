@@ -4,6 +4,8 @@ import { concatMenu } from 'mo/utils';
 import AddCursorAboveAction from './addCursorAbove';
 import AddCursorBelowAction from './addCursorBelow';
 import AddSelectionToNextFindMatchAction from './addSelectionToNextFindMatchAction';
+import CloseAllEditorsAction from './closeAllEditors';
+import CloseSavedEditorsAction from './closeSavedEditors';
 import CopyAction from './copy';
 import CopyLineDownAction from './copyLineDown';
 import CopyLineUpAction from './copyLineUp';
@@ -11,6 +13,7 @@ import CutAction from './cut';
 import ExpandSelectionAction from './expandSelection';
 import FindAction from './find';
 import FindInFilesAction from './findInFiles';
+import MaximizeEditorGroupAction from './maximizeEditorGroup';
 import MoveLineDownAction from './moveLineDown';
 import MoveLineUpAction from './moveLineUp';
 import NavigateBackAction from './navigateBack';
@@ -78,6 +81,9 @@ export const ExtendsActions: IExtension = {
             NavigateBackAction,
             NavigateForwardAction,
             NavigateToLastEditAction,
+            CloseAllEditorsAction,
+            CloseSavedEditorsAction,
+            MaximizeEditorGroupAction,
         ],
     },
     activate: function (molecule): void {
