@@ -36,6 +36,7 @@ export class KeyboardFocusService extends BaseService {
     private _isInitialized = false;
     private _globalKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
     private _services: ServiceCollection | null = null;
+    private _isRedispatching = false;
 
     constructor() {
         super('keyboardFocus');
@@ -216,6 +217,9 @@ export class KeyboardFocusService extends BaseService {
     }
 
     private handleGlobalKeydown(e: KeyboardEvent): void {
+        // Prevent re-entrant calls from re-dispatched events
+        if (this._isRedispatching) return;
+
         // When a QuickInput is active, handle arrow key navigation directly
         // through our custom QuickInputService. We check currentQuickInput
         // instead of relying on event target because the hidden editor's
@@ -252,6 +256,58 @@ export class KeyboardFocusService extends BaseService {
 
         // For non-QuickInput scenarios, only handle events with modifier keys
         if (!(e.metaKey || e.altKey || e.ctrlKey || e.shiftKey)) return;
+
+        // Skip pure modifier key presses (e.g., pressing Ctrl alone)
+        if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+
+        const modifiers = [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', e.metaKey && 'Meta']
+            .filter(Boolean)
+            .join('+');
+        const keyCombo = `${modifiers}+${e.key}`;
+
+        // If any editor already has text focus, Monaco handles the event naturally
+        if (this._hiddenEditor?.hasTextFocus() || this._focusedEditor?.hasTextFocus()) {
+            console.log(`[KeyboardFocus] ${keyCombo} → editor already has focus, Monaco handles naturally`);
+            return;
+        }
+
+        // Skip if the event target is an editable element
+        const target = e.target as HTMLElement;
+        if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+            console.log(`[KeyboardFocus] ${keyCombo} → skipped (editable element: ${target.tagName})`);
+            return;
+        }
+
+        console.log(`[KeyboardFocus] ${keyCombo} → focusing hidden editor and re-dispatching`);
+
+        // Focus the hidden editor
         this.ensureQuickInputContext();
+
+        // Re-dispatch the key event to the hidden editor's textarea so Monaco can
+        // process it. This enables chord keybindings (e.g., Ctrl+K M) where Monaco
+        // needs to receive the first key (Ctrl+K) to enter chord-waiting state.
+        const textarea = this._hiddenEditorContainer?.querySelector('textarea');
+        if (textarea) {
+            this._isRedispatching = true;
+            const clone = new KeyboardEvent(e.type, {
+                key: e.key,
+                code: e.code,
+                keyCode: e.keyCode,
+                which: e.which,
+                ctrlKey: e.ctrlKey,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+                metaKey: e.metaKey,
+                repeat: e.repeat,
+                bubbles: true,
+                cancelable: true,
+            });
+            const consumed = !textarea.dispatchEvent(clone);
+            this._isRedispatching = false;
+            console.log(`[KeyboardFocus] ${keyCombo} → re-dispatched to Monaco, consumed=${consumed}`);
+            if (consumed) {
+                e.preventDefault();
+            }
+        }
     }
 }

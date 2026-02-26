@@ -27,7 +27,7 @@ export default class QuickSelectThemeAction extends BaseAction {
             keybinding: {
                 when: undefined,
                 weight: KeybindingWeight.WorkbenchContrib,
-                primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK),
+                primary: KeyChord(KeyMod.CtrlCmd | KeyCode.KeyK, KeyMod.CtrlCmd | KeyCode.KeyK),
             },
         });
     }
