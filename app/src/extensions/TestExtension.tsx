@@ -1,9 +1,11 @@
 import { FileTypes, IContributeType, IExtension, IMoleculeContext } from '@dtinsight/molecule';
 import { debounce } from 'lodash-es';
-import { languages } from 'monaco-editor/esm/vs/editor/editor.api';
+import { editor as monacoEditor, languages, MarkerSeverity } from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { showInfoDialog } from '../utils/showInfoDialog';
 import TestPane from '../components/testPane';
+import Terminal from '../components/terminal';
+import Problems, { PROBLEMS_PANEL_ID } from '../components/problems';
 import { getFileContent, getFiles, getWorkspace, searchFileContents } from '../utils';
 import grammars from './grammars';
 
@@ -53,6 +55,43 @@ export const TestExtension: IExtension = {
             id: 'testPane',
             name: 'testPane',
             render: () => <TestPane context={molecule} />,
+        });
+
+        // Problems panel
+        molecule.panel.add({
+            id: PROBLEMS_PANEL_ID,
+            name: molecule.locale.localize('panel.item.problems', 'Problems'),
+            icon: 'warning',
+            closable: false,
+            sortIndex: 1,
+            render: () => <Problems context={molecule} />,
+        });
+
+        // Add test markers when the first model is created
+        const testMarkerDisposable = monacoEditor.onDidCreateModel((model) => {
+            testMarkerDisposable.dispose();
+            monacoEditor.setModelMarkers(model, 'sql-diagnostics', [
+                { severity: MarkerSeverity.Error, message: "'SELCT' 근처에 구문 오류가 있습니다. 'SELECT'를 사용하세요.", startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 6, source: 'sql' },
+                { severity: MarkerSeverity.Error, message: "알 수 없는 열 'user_naem'. 'user_name'을(를) 의미합니까?", startLineNumber: 3, startColumn: 8, endLineNumber: 3, endColumn: 17, source: 'sql' },
+                { severity: MarkerSeverity.Error, message: "테이블 'employes'이(가) 존재하지 않습니다. 'employees'을(를) 의미합니까?", startLineNumber: 5, startColumn: 15, endLineNumber: 5, endColumn: 23, source: 'sql' },
+                { severity: MarkerSeverity.Warning, message: "'SELECT *' 사용은 권장되지 않습니다. 필요한 열을 명시적으로 지정하세요.", startLineNumber: 7, startColumn: 1, endLineNumber: 7, endColumn: 9, source: 'sql' },
+                { severity: MarkerSeverity.Warning, message: "사용되지 않는 별칭 't'이(가) 감지되었습니다.", startLineNumber: 8, startColumn: 20, endLineNumber: 8, endColumn: 21, source: 'sql' },
+                { severity: MarkerSeverity.Warning, message: "암시적 타입 변환이 발생합니다: VARCHAR → INT", startLineNumber: 10, startColumn: 7, endLineNumber: 10, endColumn: 20, source: 'sql' },
+                { severity: MarkerSeverity.Warning, message: "WHERE 절에 인덱스가 없는 열이 사용되었습니다. 성능 저하가 발생할 수 있습니다.", startLineNumber: 12, startColumn: 7, endLineNumber: 12, endColumn: 25, source: 'sql' },
+                { severity: MarkerSeverity.Info, message: "'created_at' 열에 인덱스를 추가하면 쿼리 성능이 향상됩니다.", startLineNumber: 14, startColumn: 1, endLineNumber: 14, endColumn: 30, source: 'sql' },
+                { severity: MarkerSeverity.Info, message: "서브쿼리 대신 JOIN 사용을 고려하세요.", startLineNumber: 16, startColumn: 10, endLineNumber: 16, endColumn: 40, source: 'sql' },
+                { severity: MarkerSeverity.Hint, message: "테이블 이름 'tbl_usr'이(가) 명명 규칙을 따르지 않습니다.", startLineNumber: 18, startColumn: 6, endLineNumber: 18, endColumn: 13, source: 'sql' },
+            ]);
+        });
+
+        // Terminal panel
+        molecule.panel.open({
+            id: 'panel.item.terminal',
+            name: '터미널',
+            icon: 'terminal',
+            closable: true,
+            sortIndex: 3,
+            render: () => <Terminal />,
         });
 
         molecule.activityBar.onContextMenu(() => {
