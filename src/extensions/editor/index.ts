@@ -140,7 +140,11 @@ export const ExtendsEditor: IExtension = {
             molecule.editor.updateTab({ ...tab, value, modified: true }, groupId);
         });
 
+        let splitting = false;
         molecule.editor.onSplitEditorRight((activeTabId, groupId) => {
+            if (splitting) return;
+            splitting = true;
+            queueMicrotask(() => { splitting = false; });
             const tab = molecule.editor.getTab(activeTabId, groupId);
             if (!tab) return;
             molecule.editor.addGroup(tab);
