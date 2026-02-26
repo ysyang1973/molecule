@@ -434,13 +434,6 @@ export class BuiltinModel {
                     sortIndex: 99,
                 },
                 {
-                    id: this.constants.EDITOR_TOOLBAR_SHOW_OPEN_EDITORS,
-                    name: this.localize(
-                        this.constants.EDITOR_TOOLBAR_SHOW_OPEN_EDITORS,
-                        'Show Open Editors'
-                    ),
-                },
-                {
                     id: this.constants.EDITOR_CONTEXTMENU_CLOSE_ALL,
                     name: this.localize(this.constants.EDITOR_CONTEXTMENU_CLOSE_ALL, 'Close All'),
                     keybinding: 'Ctrl+K W',

@@ -162,12 +162,10 @@ export const ExtendsEditor: IExtension = {
             const {
                 EDITOR_TOOLBAR_SPLIT,
                 EDITOR_CONTEXTMENU_CLOSE_ALL,
-                EDITOR_TOOLBAR_SHOW_OPEN_EDITORS,
                 EDITOR_TOOLBAR_CLOSE_SAVED,
                 EDITOR_TOOLBAR_MAXIMIZE_GROUP,
                 EDITOR_TOOLBAR_LOCK_GROUP,
                 EDITOR_TOOLBAR_EDITOR_LAYOUT,
-                SIDEBAR_ITEM_EXPLORER,
             } = molecule.builtin.getState().constants;
             switch (item.id) {
                 case EDITOR_TOOLBAR_SPLIT: {
@@ -178,21 +176,6 @@ export const ExtendsEditor: IExtension = {
                 }
                 case EDITOR_CONTEXTMENU_CLOSE_ALL: {
                     molecule.editor.emit(EditorEvent.onCloseAll, groupId);
-                    break;
-                }
-                case EDITOR_TOOLBAR_SHOW_OPEN_EDITORS: {
-                    // Show the sidebar explorer with open editors panel visible
-                    molecule.sidebar.setCurrent(SIDEBAR_ITEM_EXPLORER);
-                    molecule.layout.setSidebar(true);
-                    // Ensure open editors panel is visible
-                    const { EXPLORER_ITEM_OPEN_EDITOR } = molecule.builtin.getState().constants;
-                    const openEditorPanel = molecule.explorer.get(EXPLORER_ITEM_OPEN_EDITOR);
-                    if (openEditorPanel?.hidden) {
-                        molecule.explorer.update({
-                            id: EXPLORER_ITEM_OPEN_EDITOR,
-                            hidden: false,
-                        });
-                    }
                     break;
                 }
                 case EDITOR_TOOLBAR_CLOSE_SAVED: {
