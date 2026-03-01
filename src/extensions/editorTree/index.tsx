@@ -8,6 +8,10 @@ export const ExtendsEditorTree: IExtension = {
     activate: function (molecule): void {
         molecule.editorTree.onSelect((tabId, groupId) => {
             molecule.editor.setCurrent(tabId, groupId);
+            // Defer focus until after React re-renders and Monaco switches the model
+            setTimeout(() => {
+                molecule.editor.getGroup(groupId)?.editorInstance?.focus();
+            });
         });
 
         molecule.editorTree.onClose(async (tabId, groupId) => {

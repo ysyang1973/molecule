@@ -344,9 +344,14 @@ export class EditorService extends BaseService<EditorModel> {
         return { ...new EditorGroupModel(`EDITOR_GROUP_${randomId()}`, [tab], tab.id) };
     }
 
-    public addGroup(tab: IEditorTab<any>) {
+    public addGroup(tab: IEditorTab<any>, insertIndex?: number) {
         this.dispatch((draft) => {
-            draft.groups.push(this.createGroup(tab));
+            const group = this.createGroup(tab);
+            if (insertIndex !== undefined && insertIndex >= 0 && insertIndex < draft.groups.length) {
+                draft.groups.splice(insertIndex + 1, 0, group);
+            } else {
+                draft.groups.push(group);
+            }
         });
     }
 

@@ -35,10 +35,10 @@ export default class NewFileAction extends BaseAction {
         }
 
         let counter = ++NewFileAction.fileCounter;
-        while (existingNames.has(`Untitled-${counter}`)) {
+        while (existingNames.has(`sql${counter}`)) {
             counter = ++NewFileAction.fileCounter;
         }
-        return `Untitled-${counter}`;
+        return `sql${counter}`;
     }
 
     run() {
@@ -48,7 +48,7 @@ export default class NewFileAction extends BaseAction {
             name: this.getNextFileName(),
             icon: 'file',
             value: '',
-            language: 'sql',
+            language: 'mysql',
         });
     }
 }

@@ -147,11 +147,13 @@ export const ExtendsEditor: IExtension = {
             queueMicrotask(() => { splitting = false; });
             const tab = molecule.editor.getTab(activeTabId, groupId);
             if (!tab) return;
-            molecule.editor.addGroup(tab);
             const groups = molecule.editor.getGroups();
-            const last = groups.at(-1);
-            if (last) {
-                molecule.editor.setCurrentGroup(last.id);
+            const sourceIndex = groups.findIndex((g) => g.id === groupId);
+            molecule.editor.addGroup(tab, sourceIndex);
+            const updatedGroups = molecule.editor.getGroups();
+            const newGroup = updatedGroups[sourceIndex + 1];
+            if (newGroup) {
+                molecule.editor.setCurrentGroup(newGroup.id);
             }
         });
 

@@ -8,7 +8,7 @@ interface TerminalLine {
 }
 
 const WELCOME_MESSAGE = `Mock Terminal v1.0.0
-'help'를 입력하면 사용 가능한 명령어를 확인할 수 있습니다.
+Type 'help' to see available commands.
 `;
 
 const MOCK_FILES = ['README.md', 'package.json', 'src/', 'node_modules/', 'tsconfig.json', 'vite.config.ts'];
@@ -25,15 +25,15 @@ function executeCommand(input: string): TerminalLine[] {
             lines.push({
                 type: 'result',
                 content: [
-                    '사용 가능한 명령어:',
-                    '  help          사용 가능한 명령어 목록',
-                    '  echo <text>   텍스트 출력',
-                    '  clear         화면 지우기',
-                    '  date          현재 날짜/시간',
-                    '  pwd           현재 디렉토리',
-                    '  ls            파일 목록',
-                    '  whoami        사용자 이름',
-                    '  env           환경 변수',
+                    'Available commands:',
+                    '  help          Show available commands',
+                    '  echo <text>   Print text',
+                    '  clear         Clear screen',
+                    '  date          Current date/time',
+                    '  pwd           Current directory',
+                    '  ls            List files',
+                    '  whoami        Current user',
+                    '  env           Environment variables',
                 ].join('\n'),
             });
             break;
@@ -46,7 +46,7 @@ function executeCommand(input: string): TerminalLine[] {
             return [{ type: 'command', content: '__CLEAR__' }];
 
         case 'date':
-            lines.push({ type: 'result', content: new Date().toLocaleString('ko-KR') });
+            lines.push({ type: 'result', content: new Date().toLocaleString() });
             break;
 
         case 'pwd':
@@ -77,7 +77,7 @@ function executeCommand(input: string): TerminalLine[] {
         default:
             lines.push({
                 type: 'error',
-                content: `bash: ${cmd}: 명령어를 찾을 수 없습니다`,
+                content: `bash: ${cmd}: command not found`,
             });
             break;
     }

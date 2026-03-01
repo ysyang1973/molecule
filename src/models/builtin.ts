@@ -276,7 +276,7 @@ export class BuiltinModel {
                 id: this.constants.SIDEBAR_ITEM_EXPLORER,
                 name: this.localize(this.constants.SIDEBAR_ITEM_EXPLORER, 'Explore'),
                 icon: 'files',
-                sortIndex: 1,
+                sortIndex: 2,
                 alignment: 'top',
             },
         SEARCH: () =>
@@ -284,7 +284,7 @@ export class BuiltinModel {
                 id: this.constants.SIDEBAR_ITEM_SEARCH,
                 name: this.localize(this.constants.SIDEBAR_ITEM_SEARCH, 'Search'),
                 icon: 'search',
-                sortIndex: 2,
+                sortIndex: 3,
                 alignment: 'top',
             },
         SEARCH_TOOLBAR: () =>

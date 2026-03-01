@@ -153,6 +153,72 @@ export const ExtendsActions: IExtension = {
             }
         }, true);
 
+        // Chord keybinding handler for Ctrl+K chords.
+        // Monaco's chord mechanism requires the hidden editor to maintain focus between
+        // the two key presses, which isn't always reliable. This handler provides a
+        // direct fallback to ensure Ctrl+K chord keybindings always work.
+        {
+            let chordActive = false;
+            let chordTimer: ReturnType<typeof setTimeout> | null = null;
+            const CHORD_TIMEOUT = 5000;
+
+            // Map of second chord keys to action IDs
+            const ctrlKChords: Record<string, string> = {
+                KeyM: MaximizeEditorGroupAction.ID,
+                KeyW: CloseAllEditorsAction.ID,
+                KeyU: CloseSavedEditorsAction.ID,
+            };
+
+            document.addEventListener('keydown', (e) => {
+                // First chord key: Ctrl+K (without Shift/Alt)
+                if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.code === 'KeyK') {
+                    // Skip if target is an editable element
+                    const target = e.target as HTMLElement;
+                    if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+                        return;
+                    }
+                    chordActive = true;
+                    if (chordTimer) clearTimeout(chordTimer);
+                    chordTimer = setTimeout(() => {
+                        chordActive = false;
+                        chordTimer = null;
+                    }, CHORD_TIMEOUT);
+                    return;
+                }
+
+                // Second chord key: no modifiers, matches a known chord
+                if (chordActive && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+                    chordActive = false;
+                    if (chordTimer) {
+                        clearTimeout(chordTimer);
+                        chordTimer = null;
+                    }
+
+                    const target = e.target as HTMLElement;
+                    if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
+                        return;
+                    }
+
+                    const actionId = ctrlKChords[e.code];
+                    if (actionId) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        molecule.action.execute(actionId);
+                        return;
+                    }
+                }
+
+                // Any other key resets chord state
+                if (chordActive) {
+                    chordActive = false;
+                    if (chordTimer) {
+                        clearTimeout(chordTimer);
+                        chordTimer = null;
+                    }
+                }
+            }, true); // capture phase
+        }
+
         // update menu's keybinding
         updateMenuKeybinding(NewFileAction.ID);
         updateMenuKeybinding(QuickAccessCommandAction.ID);

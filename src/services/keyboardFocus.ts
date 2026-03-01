@@ -276,25 +276,16 @@ export class KeyboardFocusService extends BaseService {
         // Skip pure modifier key presses (e.g., pressing Ctrl alone)
         if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
 
-        const modifiers = [e.ctrlKey && 'Ctrl', e.shiftKey && 'Shift', e.altKey && 'Alt', e.metaKey && 'Meta']
-            .filter(Boolean)
-            .join('+');
-        const keyCombo = `${modifiers}+${e.key}`;
-
         // If any editor already has text focus, Monaco handles the event naturally
         if (this._hiddenEditor?.hasTextFocus() || this._focusedEditor?.hasTextFocus()) {
-            console.log(`[KeyboardFocus] ${keyCombo} → editor already has focus, Monaco handles naturally`);
             return;
         }
 
         // Skip if the event target is an editable element
         const target = e.target as HTMLElement;
         if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) {
-            console.log(`[KeyboardFocus] ${keyCombo} → skipped (editable element: ${target.tagName})`);
             return;
         }
-
-        console.log(`[KeyboardFocus] ${keyCombo} → focusing hidden editor and re-dispatching`);
 
         // Focus the hidden editor and re-dispatch
         this.redispatchToHiddenEditor(e);

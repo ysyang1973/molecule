@@ -59,6 +59,17 @@ export default function Group({
     onNewTab,
 }: IGroupProps) {
     const viewState = useRef(new WeakMap());
+    const prevActiveTab = useRef(group.activeTab);
+
+    // Save view state for the outgoing model before effects run setModel
+    if (prevActiveTab.current !== group.activeTab && group.editorInstance) {
+        const currentModel = group.editorInstance.getModel();
+        if (currentModel) {
+            viewState.current.set(currentModel, group.editorInstance.saveViewState());
+        }
+        prevActiveTab.current = group.activeTab;
+    }
+
     const tab = group.data.find(searchById(group.activeTab));
 
     const handleMount = (editor: editor.IStandaloneCodeEditor) => {
@@ -70,8 +81,8 @@ export default function Group({
                 const state = viewState.current.get(model);
                 if (state) {
                     editor.restoreViewState(state);
-                    editor.focus();
                 }
+                editor.focus();
             }
         });
 

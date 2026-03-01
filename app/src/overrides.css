@@ -1,0 +1,13 @@
+/* ===== Sidebar-Editor Border ===== */
+/* sideBar.border is null in dark/light themes, make it visible */
+:root {
+    --sideBar-border: var(--panel-border, #2d2d2d);
+}
+
+/* ===== Compact Editor Tabs ===== */
+.mo-editor__group .mo-editor__group__header__tab {
+    line-height: 26px;
+}
+.mo-editor__group .mo-editor__group__content {
+    height: calc(100% - 48px);
+}

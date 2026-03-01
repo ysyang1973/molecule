@@ -60,4 +60,11 @@ export default [
         grammar: 'TypeScriptReact.tmLanguage.json',
         scopeName: 'source.tsx',
     },
+    {
+        id: 'sql',
+        aliases: ['SQL', 'sql'],
+        extensions: ['.sql'],
+        grammar: 'sql.tmLanguage.json',
+        scopeName: 'source.sql',
+    },
 ];

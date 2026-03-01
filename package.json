@@ -8,9 +8,10 @@
         "esm"
     ],
     "scripts": {
-        "dev": "./bin/m.cjs dev",
-        "build": "./bin/m.cjs build",
+        "dev": ".\\bin\\m.cjs dev",
+        "build": ".\\bin\\m.cjs build",
         "web": "cd app && npm run dev",
+        "1": ".\\bin\\m.cjs build && cd app && npm run dev",
         "lint": "npx eslint './src/**/*.ts' './src/**/*.tsx'",
         "prettier": "npx prettier --write src/",
         "prepublishOnly": "npm run build",
